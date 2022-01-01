@@ -10,9 +10,9 @@ using System.Numerics;
 
 class IPlayer : IUserPresence
 {
-    public float X { get; set; } // TODO: Can this be a vector instead? 
-    public float Y { get; set; }
-    public float Z { get; set; }
+    public uint m_Body { get; set; }
+    public uint m_Shape { get; set; }
+    public bool voxelLoaded { get; set; }
     public bool Persistence { get; set; }
     public string? SessionId { get; set; }
     public string? Status { get; set; }
@@ -31,13 +31,36 @@ public class TeardownNakama
 
     static Dictionary<string, IPlayer> currentPresences = new();
 
-    private static uint m_VoxBody = 0;
-    private static uint m_Shape = 0;
+
     enum OP_CODES : ushort
     {
         PLAYER_POS = 1,
         PLAYER_SPAWN = 2,
         SPAWN_ALL = 3
+    }
+
+    static void CreatePlayer(IUserPresence presence)
+    {
+        // Create a static body for the player, set their position
+        uint m_Body = Body.Create();
+        Body.SetDynamic(m_Body, false);
+        Body.SetPosition(m_Body, new Vector3(0, 0, 0));
+
+        // Add user to our current dictionary of players
+        IPlayer newPlayer = new()
+        {
+            m_Body = m_Body,
+            m_Shape = Shape.Create(m_Body),
+            voxelLoaded = false,
+            Persistence = presence.Persistence,
+            SessionId = presence.SessionId,
+            Status = presence.Status,
+            Username = presence.Username,
+            UserId = presence.UserId
+        };
+
+        currentPresences.Add(presence.UserId, newPlayer);
+        Log.General("{0}: Added into player into currentPlayers", presence.UserId);
     }
 
     static void InitListeners()
@@ -52,6 +75,7 @@ public class TeardownNakama
             {
                 case (ushort)OP_CODES.PLAYER_POS:
                     string stringJson = Encoding.Default.GetString(newState.State);
+                    
                     var incomingData = JsonConvert.DeserializeObject<Dictionary<string, dynamic>>(stringJson); // Haven't been able to figure out how to change 'dynamic' to be a class
 
                     /* The current structure of JSON we receive (there's an optimisation to be made here and not to use JSON but leave that for later) is 
@@ -75,29 +99,13 @@ public class TeardownNakama
                      */
                     foreach (var presence in incomingData)
                     {
-                        // Check to see if the incoming data is from the current local player.
-                        if (presence.Key == session.UserId)
+                        Log.General("{0} is moving to x {1}", presence.Key, presence.Value.x);
+                        // Check to see if the incoming data is a user in our current dictionary of players
+                        if (currentPresences.ContainsKey(presence.Key))
                         {
-                            // Do nothing for now 
-                            return;
-                        } else
-                        {
-                            // Check to see if the incoming data is a user in our current dictionary of players
-                            if (currentPresences.ContainsKey(presence.Key))
-                            {
-                                currentPresences[presence.Key].X = presence.Value.x;
-                                currentPresences[presence.Key].Y = presence.Value.y;
-                                currentPresences[presence.Key].Z = presence.Value.z;
-                            }
-                            else
-                            {
-                                // Is this check neccesary if we already add them when they join?  
-                                IPlayer newPlayer = new IPlayer { X = presence.Value.x, Y = presence.Value.y, Z = presence.Value.z, SessionId = presence.Value.session_id, UserId = presence.Value.user_id };
-                                currentPresences.Add(presence.Key, newPlayer);
-                            }
-
-                            // Set their character to move
-                            Body.SetTransform(m_VoxBody, new Transform(new Vector3((float)presence.Value.x, (float)presence.Value.y, (float)presence.Value.z), new Quaternion(0, 0, 0, 1)));
+                            // Update Body position with new position data
+                            Body.SetPosition(currentPresences[presence.Key].m_Body, new Vector3((float)presence.Value.x, (float)presence.Value.y, (float)presence.Value.z));
+                            Body.SetTransform(currentPresences[presence.Key].m_Body, new Transform(new Vector3((float)presence.Value.x, (float)presence.Value.y, (float)presence.Value.z), new Quaternion(0, 0, 0, 1)));
                         }
                     }
                     break;
@@ -110,18 +118,15 @@ public class TeardownNakama
         {
             if (player.Joins.Any())
             {
-                foreach (var presense in player.Joins)
+                foreach (var presence in player.Joins)
                 {
-                    // Add user to our current dictionary of players
-                    IPlayer newPlayer = new IPlayer { X = 0, Y = 0, Z = 0, Persistence = presense.Persistence, SessionId = presense.SessionId, Status = presense.Status, Username = presense.Username, UserId = presense.UserId };
-                    currentPresences.Add(presense.UserId, newPlayer);
-
-                    // Spawn them in
-                    // TODO: Figure out how to dynamically spawn voxels (probably want to spawn in a sprite image rather than voxel?)
-                    //       Currently it's just using the 1 m_VoxBody id. 
-                    //Body.SetTransform(m_VoxBody, new Transform(new Vector3(50, 10, 10), new Quaternion(0, 0, 0, 1)));
-
-                    Log.General("A player has joined the game with id of {0}", presense.UserId);
+                    if (presence.UserId != session.UserId)
+                    {
+                        Log.General("A player has joined the game with id of {0}", presence.UserId);
+                        CreatePlayer(presence);
+                        Body.SetPosition(currentPresences[presence.UserId].m_Body, new Vector3((float)0, (float)0, (float)0));
+                        Body.SetTransform(currentPresences[presence.UserId].m_Body, new Transform(new Vector3(0, 0, 0), new Quaternion(0, 0, 0, 1)));
+                    }
                 }
             };
         };
@@ -132,27 +137,25 @@ public class TeardownNakama
     /*
      * this function will be called every time the player is done updating (camera position updates, health updates, etc)
      */
-    static async void OnPostPlayerUpdate()
+    static void OnPostPlayerUpdate()
     {
         // if the user is in the menu / doing something else, don't run this
         if (!Game.IsPlaying())
             return;
 
-        
-        // I believe this is where we have to define our VoxBody's as anywhere else crashes the game? 
-        if (m_VoxBody > 0)
+        foreach (var presence in currentPresences)
         {
+            // If it's not the local player, load in their vox player model
+            if (presence.Key != session.UserId && !presence.Value.voxelLoaded)
+            {
+                Shape.LoadVox(presence.Value.m_Shape, "D:/Games/SteamLibrary/steamapps/common/Teardown/mods/assetpack/assets/props/container_red.vox", "body", 1.0f);
+                Body.SetTransform(presence.Value.m_Body, new Transform(new Vector3(50, 10, 10), new Quaternion(0, 0, 0, 1)));
+                presence.Value.voxelLoaded = true;
 
-        } else
-        {
-            m_VoxBody = Body.Create();
-            m_Shape = Shape.Create(m_VoxBody);
-
-            // TODO: Change to be dynamic path
-            Shape.LoadVox(m_Shape, "D:/Games/SteamLibrary/steamapps/common/Teardown/mods/assetpack/assets/props/container_red.vox", "body", 1.0f);
+                Log.General("{0}: Voxel Loaded", presence.Key);
+            }
         }
         
-
         if (socket == null || session == null || matchId == null)
         {
             return;
@@ -173,7 +176,7 @@ public class TeardownNakama
         }.ToJson();
 
         // Every local game tick, send client's position data to Nakama
-        await socket.SendMatchStateAsync(matchId, 1, newState);
+        socket.SendMatchStateAsync(matchId, 1, newState);
     }
 
     static async void JoinGame()
@@ -193,18 +196,21 @@ public class TeardownNakama
         IApiRpc response = await client.RpcAsync(session, "get_match_id");
         matchId = response.Payload.Trim(new char[] { '"' });
 
-        Log.General("Found match with id: {0}", matchId);
-
         IMatch match = await socket.JoinMatchAsync(matchId);
 
         Log.General("Joined game with id: {0}", matchId);
+        Log.General("Current local user id: {0}", session.UserId);
 
         // All the players already in the game
         // TODO: Figure out spawning of each player
         //       Remember that the current local player is included in here too! Make sure you add a guard check for that (user_id != session.user_id)
         foreach (IUserPresence presence in match.Presences)
         {
-            Log.General("User id '{0}' is currently in the game", presence.UserId);
+            if (presence.UserId != session.UserId)
+            {
+                Log.General("Found user id '{0}' already in the game", presence.UserId);
+                CreatePlayer(presence);
+            }
         }
     }
 
@@ -216,15 +222,22 @@ public class TeardownNakama
             return;
         }
 
-        Log.General("Nakama authenticating with id: {0}", deviceId);
+        Log.General("Attempting to authenticate with device id of: {0}", deviceId);
 
         session = await client.AuthenticateDeviceAsync(deviceId, deviceId);
-
         socket = Socket.From(client);
         await socket.ConnectAsync(session);
-        Log.General("Nakama session and socket created");
 
+        Log.General("Nakama session and socket created");
         InitListeners();
+    }
+
+    static void LogCurrentPresences()
+    {
+        foreach(var presence in currentPresences)
+        {
+            Log.General("{0}: {1}", presence.Key, presence.Value);
+        }
     }
 
     /*
@@ -232,9 +245,11 @@ public class TeardownNakama
      * otherwise the GC is going to collect them
      */
 
-    private static dBindCallback ToggleNoclipCallbackFunc = new dBindCallback(JoinGame);
+    private static dBindCallback LogCurrentPresencesCallbackFunc = new dBindCallback(LogCurrentPresences);
+    private static dBindCallback JoinGameCallbackFunc = new dBindCallback(JoinGame);
     private static dCallback PostPlayerUpdateCallbackFunc = new dCallback(OnPostPlayerUpdate);
 
+    private static CBind? LogCurrentPresencesBind;
     private static CBind? JoinGameBind;
     private static CCallback? PostPlayerUpdateCallback;
 
@@ -245,6 +260,7 @@ public class TeardownNakama
      */
     public static void Init()
     {
+        LogCurrentPresencesBind = new CBind(EKeyCode.VK_B, LogCurrentPresences);
         JoinGameBind = new CBind(EKeyCode.VK_N, JoinGame);
         PostPlayerUpdateCallback = new CCallback(ECallbackType.PostPlayerUpdate, PostPlayerUpdateCallbackFunc);
 

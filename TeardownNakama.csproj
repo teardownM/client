@@ -25,7 +25,7 @@
   </ItemGroup>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="xcopy /y /d  &quot;$(ProjectDir)bin\x64\Debug\net6.0\TeardownNakama.dll&quot; &quot;C:\Teardown Development\sledge\proj\Debug\mods\TeardownNakama&quot;" />
+    <Exec Command="xcopy /y /d  &quot;$(ProjectDir)bin\x64\Debug\net6.0\TeardownNakama.dll&quot; &quot;C:\TeardownDevelopment\sledge\proj\Debug\mods\TeardownNakama&quot;&#xD;&#xA;xcopy /y /d  &quot;$(ProjectDir)bin\x64\Debug\net6.0\TeardownNakama.dll&quot; &quot;C:\TeardownDevelopment\sledge2\proj\Debug\mods\TeardownNakama&quot;" />
   </Target>
 
 </Project>
