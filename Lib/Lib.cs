@@ -145,7 +145,7 @@ public class TeardownNakama
             // If it's not the local player, load in their vox player model
             if (presence.Key != session.UserId && !presence.Value.voxelLoaded)
             {
-                Shape.LoadVox(presence.Value.m_Shape, "Assets/Vox/character_lee.vox", "body", 1.0f / 2);
+                Shape.LoadVox(presence.Value.m_Shape, "Assets/Vox/character_lee.vox", "", 1.0f / 2);
                 Shape.SetCollisionFilter(presence.Value.m_Shape, 0, 0);
                 Body.SetTransform(presence.Value.m_Body, new Transform(new Vector3(50, 10, 10), new Quaternion(0, 0, 0, 1)));
                 presence.Value.voxelLoaded = true;
