@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">   <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <AssemblyName>TeardownNakama</AssemblyName>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <Platforms>x64</Platforms>
+    <ProduceReferenceAssembly>False</ProduceReferenceAssembly>
+  </PropertyGroup>
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="xcopy $(ProjectDir)$(OutDir)TeardownNakama.dll ..\..\mods\TeardownNakama /y"/>
+  </Target>
+
+  <ItemGroup>
+    <Reference Include="SledgeLib">
+      <HintPath>..\..\mods\sledgelib.dll</HintPath>
+    </Reference>
+    <Reference Include="Nakama">
+      <HintPath>Nakama.dll</HintPath>
+    </Reference>
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.1"/>
+  </ItemGroup>
+</Project>

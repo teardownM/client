@@ -1,4 +1,4 @@
-﻿using SledgeLib;
+using SledgeLib;
 
 using Nakama;
 using Nakama.TinyJson;
@@ -120,13 +120,13 @@ public class TeardownNakama
             {
                 foreach (var presence in player.Joins)
                 {
-                    if (presence.UserId != session.UserId)
-                    {
+                    // if (presence.UserId != session.UserId)
+                    // {
                         Log.General("A player has joined the game with id of {0}", presence.UserId);
                         CreatePlayer(presence);
                         Body.SetPosition(currentPresences[presence.UserId].m_Body, new Vector3((float)0, (float)0, (float)0));
                         Body.SetTransform(currentPresences[presence.UserId].m_Body, new Transform(new Vector3(0, 0, 0), new Quaternion(0, 0, 0, 1)));
-                    }
+                    // }
                 }
             };
         };
@@ -146,9 +146,9 @@ public class TeardownNakama
         foreach (var presence in currentPresences)
         {
             // If it's not the local player, load in their vox player model
-            if (presence.Key != session.UserId && !presence.Value.voxelLoaded)
+            if (!presence.Value.voxelLoaded)
             {
-                Shape.LoadVox(presence.Value.m_Shape, "D:/Games/SteamLibrary/steamapps/common/Teardown/mods/assetpack/assets/props/container_red.vox", "body", 1.0f);
+                Shape.LoadVox(presence.Value.m_Shape, "Assets/Vox/character_lee.vox", "", 0.5f);
                 Body.SetTransform(presence.Value.m_Body, new Transform(new Vector3(50, 10, 10), new Quaternion(0, 0, 0, 1)));
                 presence.Value.voxelLoaded = true;
 
