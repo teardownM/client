@@ -2,6 +2,7 @@ using SledgeLib;
 
 using Nakama;
 using Nakama.TinyJson;
+using Steamworks;
 
 using Newtonsoft.Json;
 
@@ -22,7 +23,7 @@ class IPlayer : IUserPresence
 
 public class TeardownNakama
 {
-    static readonly string deviceId = Guid.NewGuid().ToString(); // TODO - Make this steamId
+    static readonly string deviceId = SteamUser.GetSteamID().ToString(); // TODO - Make this steamId
 
     static IClient? client;
     static ISession? session;
@@ -30,7 +31,6 @@ public class TeardownNakama
     static string? matchId;
 
     static Dictionary<string, IPlayer> currentPresences = new();
-
 
     enum OP_CODES : ushort
     {
@@ -258,6 +258,12 @@ public class TeardownNakama
      */
     public static void Init()
     {
+        if (SteamAPI.Init()) {
+            Log.General("SteamAPI initialized");
+        } else {
+            Log.Error("SteamAPI failed to initialize");
+        }
+
         LogCurrentPresencesBind = new CBind(EKeyCode.VK_B, LogCurrentPresences);
         JoinGameBind = new CBind(EKeyCode.VK_N, JoinGame);
         PostPlayerUpdateCallback = new CCallback(ECallbackType.PostPlayerUpdate, PostPlayerUpdateCallbackFunc);
@@ -270,6 +276,7 @@ public class TeardownNakama
     // TODO:
     public static void Shutdown()
     {
+        SteamAPI.Shutdown();
         Log.General("Teardown Nakama shutting down");
     }
 

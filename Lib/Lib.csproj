@@ -17,6 +17,9 @@
     <Reference Include="Nakama">
       <HintPath>Nakama.dll</HintPath>
     </Reference>
+    <Reference Include="Steamworks">
+      <HintPath>Steamworks.NET.dll</HintPath>
+    </Reference>
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1"/>
   </ItemGroup>
 </Project>
