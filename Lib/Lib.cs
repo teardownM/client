@@ -120,13 +120,13 @@ public class TeardownNakama
             {
                 foreach (var presence in player.Joins)
                 {
-                    // if (presence.UserId != session.UserId)
-                    // {
+                    if (presence.UserId != session.UserId)
+                    {
                         Log.General("A player has joined the game with id of {0}", presence.UserId);
                         CreatePlayer(presence);
                         Body.SetPosition(currentPresences[presence.UserId].m_Body, new Vector3((float)0, (float)0, (float)0));
                         Body.SetTransform(currentPresences[presence.UserId].m_Body, new Transform(new Vector3(0, 0, 0), new Quaternion(0, 0, 0, 1)));
-                    // }
+                    }
                 }
             };
         };
