@@ -29,6 +29,7 @@ public class TeardownNakama
     static ISession? session;
     static ISocket? socket;
     static string? matchId;
+    static bool steamInitialized;
 
     static Dictionary<string, IPlayer> currentPresences = new();
 
@@ -258,10 +259,13 @@ public class TeardownNakama
      */
     public static void Init()
     {
-        if (SteamAPI.Init()) {
-            Log.General("SteamAPI initialized");
-        } else {
-            Log.Error("SteamAPI failed to initialize");
+        if (!steamInitialized) {
+            if (SteamAPI.Init()) {
+                Log.General("SteamAPI initialized");
+                steamInitialized = true;
+            } else {
+                Log.Error("SteamAPI failed to initialize");
+            }
         }
 
         LogCurrentPresencesBind = new CBind(EKeyCode.VK_B, LogCurrentPresences);
