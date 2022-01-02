@@ -21,15 +21,25 @@ class IPlayer : IUserPresence
     public string? UserId { get; set; }
 }
 
+class IPlayerState {
+    public string node { get; set; }
+    public int reason { get; set; }
+    public string session_id { get; set; }
+    public string user_id { get; set; }
+    public string username { get; set; }
+    public int x { get; set; }
+    public int y { get; set; }
+    public int z { get; set; }
+}
+
 public class TeardownNakama
 {
-    static readonly string deviceId = SteamUser.GetSteamID().ToString(); // TODO - Make this steamId
+    static readonly string deviceId = SteamUser.GetSteamID().ToString(); //Guid.NewGuid().ToString();
 
     static IClient? client;
     static ISession? session;
     static ISocket? socket;
     static string? matchId;
-    static bool steamInitialized;
 
     static Dictionary<string, IPlayer> currentPresences = new();
 
@@ -76,7 +86,9 @@ public class TeardownNakama
             {
                 case (ushort)OP_CODES.PLAYER_POS:
                     string stringJson = Encoding.Default.GetString(newState.State);
+                    // IPlayerState playerState = JsonConvert.DeserializeObject<IPlayerState>(stringJson);
                     var incomingData = JsonConvert.DeserializeObject<Dictionary<string, dynamic>>(stringJson); // Haven't been able to figure out how to change 'dynamic' to be a class
+                    Log.General("incomingData {0}", incomingData.Count());
 
                     /* The current structure of JSON we receive (there's an optimisation to be made here and not to use JSON but leave that for later) is 
                      * a dictonary where the key is the 'user_id' of the player. The value is their properties such as their x,y,z values, health etc.
@@ -97,8 +109,12 @@ public class TeardownNakama
                      * 
                      * This way, we can easier access any user's properties with their 'user_id' in the global varible 'presences'.
                      */
+                    // Log.General("Moving player {0} to {1},{2},{3}", playerState.user_id, playerState.x, playerState.y, playerState.z);
+                    // Body.SetPosition(currentPresences[playerState.user_id].m_Body, new Vector3(playerState.x, playerState.y, playerState.z));
+
                     foreach (var presence in incomingData)
                     {
+                        Log.General("{0} should be moving to X: {}", presence.Key, presence.Value.x);
                         // Check to see if the incoming data is a user in our current dictionary of players
                         if (currentPresences.ContainsKey(presence.Key))
                         {
@@ -146,7 +162,7 @@ public class TeardownNakama
             // If it's not the local player, load in their vox player model
             if (presence.Key != session.UserId && !presence.Value.voxelLoaded)
             {
-                Shape.LoadVox(presence.Value.m_Shape, "Assets/Vox/character_lee.vox", "", 1.0f / 2);
+                Shape.LoadVox(presence.Value.m_Shape, "Assets/Vox/player.vox", "", 1.0f);
                 Shape.SetCollisionFilter(presence.Value.m_Shape, 0, 0);
                 Body.SetTransform(presence.Value.m_Body, new Transform(new Vector3(50, 10, 10), new Quaternion(0, 0, 0, 1)));
                 presence.Value.voxelLoaded = true;
@@ -156,9 +172,7 @@ public class TeardownNakama
         }
 
         if (socket == null || session == null || matchId == null)
-        {
             return;
-        }
 
         Vector2 playerInput = Player.GetPlayerMovementInput();
         Transform playerTransform = Player.GetCameraTransform();
@@ -180,6 +194,7 @@ public class TeardownNakama
 
     static async void JoinGame()
     {
+        Log.General("{0} sent data to the server", session.UserId);
         if (client == null || socket == null)
         {
             Log.Error("No client or socket found when authenticating");
@@ -259,13 +274,11 @@ public class TeardownNakama
      */
     public static void Init()
     {
-        if (!steamInitialized) {
-            if (SteamAPI.Init()) {
-                Log.General("SteamAPI initialized");
-                steamInitialized = true;
-            } else {
-                Log.Error("SteamAPI failed to initialize");
-            }
+        if (SteamAPI.Init()) {
+            Log.General("SteamAPI initialized");
+        } else {
+            Log.Error("SteamAPI failed to initialize");
+            return;
         }
 
         LogCurrentPresencesBind = new CBind(EKeyCode.VK_B, LogCurrentPresences);
