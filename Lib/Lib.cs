@@ -75,7 +75,6 @@ public class TeardownNakama
             {
                 case (ushort)OP_CODES.PLAYER_POS:
                     string stringJson = Encoding.Default.GetString(newState.State);
-                    
                     var incomingData = JsonConvert.DeserializeObject<Dictionary<string, dynamic>>(stringJson); // Haven't been able to figure out how to change 'dynamic' to be a class
 
                     /* The current structure of JSON we receive (there's an optimisation to be made here and not to use JSON but leave that for later) is 
@@ -99,12 +98,10 @@ public class TeardownNakama
                      */
                     foreach (var presence in incomingData)
                     {
-                        Log.General("{0} is moving to x {1}", presence.Key, presence.Value.x);
                         // Check to see if the incoming data is a user in our current dictionary of players
                         if (currentPresences.ContainsKey(presence.Key))
                         {
                             // Update Body position with new position data
-                            Body.SetPosition(currentPresences[presence.Key].m_Body, new Vector3((float)presence.Value.x, (float)presence.Value.y, (float)presence.Value.z));
                             Body.SetTransform(currentPresences[presence.Key].m_Body, new Transform(new Vector3((float)presence.Value.x, (float)presence.Value.y, (float)presence.Value.z), new Quaternion(0, 0, 0, 1)));
                         }
                     }
@@ -146,16 +143,17 @@ public class TeardownNakama
         foreach (var presence in currentPresences)
         {
             // If it's not the local player, load in their vox player model
-            if (!presence.Value.voxelLoaded)
+            if (presence.Key != session.UserId && !presence.Value.voxelLoaded)
             {
-                Shape.LoadVox(presence.Value.m_Shape, "Assets/Vox/character_lee.vox", "", 0.5f);
+                Shape.LoadVox(presence.Value.m_Shape, "Assets/Vox/character_lee.vox", "body", 1.0f / 2);
+                Shape.SetCollisionFilter(presence.Value.m_Shape, 0, 0);
                 Body.SetTransform(presence.Value.m_Body, new Transform(new Vector3(50, 10, 10), new Quaternion(0, 0, 0, 1)));
                 presence.Value.voxelLoaded = true;
 
                 Log.General("{0}: Voxel Loaded", presence.Key);
             }
         }
-        
+
         if (socket == null || session == null || matchId == null)
         {
             return;
