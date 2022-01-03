@@ -37,13 +37,16 @@ public class TeardownNakama {
             return;
         }
 
-        Log.General("Attempting to authenticate with device id of: {0}", m_DeviceID);
-
         Client.m_Session = await Client.m_Client.AuthenticateDeviceAsync(m_DeviceID, m_DeviceID);
+        if (!Client.m_Session.Created) {
+            Log.Error("Authentication Failed");
+            return;
+        }
+
         Client.m_Socket = Socket.From(Client.m_Client);
         await Client.m_Socket.ConnectAsync(Client.m_Session);
 
-        Log.General("Nakama session and socket created");
+        Log.General("TeardownNakama Running");
         Client.InitializeListeners();
     }
 

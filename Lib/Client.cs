@@ -99,10 +99,7 @@ public class Client {
 
                     if (incomingData != null) {
                         foreach (var presence in incomingData) {
-                            // Check to see if the incoming data is a user in our current dictionary of players
                             if (currentPresences.ContainsKey(presence.Key)) {
-                                // Set the position of the player
-                                // Log.General("Moving player {0} to {1} {2} {3}", presence.Key, presence.Value.x, presence.Value.y, presence.Value.z);
                                 Body.SetTransform(currentPresences[presence.Key].m_Body, new Transform(new Vector3((float)presence.Value.x, (float)presence.Value.y, (float)presence.Value.z), new Quaternion(0, 0, 0, 1)));
                             }
                         }
@@ -125,8 +122,6 @@ public class Client {
                 }
             };
         };
-
-        Log.General("Sockets loaded");
     }
 
     public static void OnUpdate() {
