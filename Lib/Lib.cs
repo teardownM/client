@@ -59,6 +59,9 @@ public class TeardownNakama {
             Client.m_Client = new Nakama.Client("http", "127.0.0.1", 7350, "defaultkey");
             Authenticate();
         });
+
+        Client.m_Client = new Nakama.Client("http", "127.0.0.1", 7350, "defaultkey");
+        Authenticate();
     }
 
     public static void OnInitialize() {
@@ -89,6 +92,15 @@ public class TeardownNakama {
             Client.m_Socket.Dispose();
             Client.m_Socket = null;
         }
+
+        if (m_UseSteam) {
+            m_DeviceID = SteamUser.GetSteamID().ToString();
+        } else {
+            m_DeviceID = Guid.NewGuid().ToString();
+        }
+
+        Client.m_Client = new Nakama.Client("http", "127.0.0.1", 7350, "defaultkey");
+        Authenticate();
     }
 
     public static void OnShutdown() {
