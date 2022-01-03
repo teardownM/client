@@ -44,7 +44,7 @@ public class Client {
         };
 
         currentPresences.Add(presence.UserId, newPlayer);
-        Log.General("{0}: Added into player into currentPlayers", presence.UserId);
+        Log.General("{0}: Added player into currentPlayers", presence.UserId);
     }
 
     public static async void JoinGame() {
