@@ -73,6 +73,10 @@ public class TeardownNakama {
 
     public static void Shutdown() {
         Client.Disconnect();
+        if (Client.m_Socket != null) {
+            Client.m_Socket.Dispose();
+            Client.m_Socket = null;
+        }
 
         if (m_UseSteam)
             SteamAPI.Shutdown();
