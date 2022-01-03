@@ -43,7 +43,7 @@ public class TeardownNakama {
         Client.m_Socket = Socket.From(Client.m_Client);
         await Client.m_Socket.ConnectAsync(Client.m_Session);
 
-        Log.General("Nakama session and Client.m_Socket created");
+        Log.General("Nakama session and socket created");
         Client.InitializeListeners();
     }
 
@@ -72,12 +72,10 @@ public class TeardownNakama {
     }
 
     public static void Reload() {
-        // if (Client.m_Socket != null && Client.m_Socket.IsConnected) {
-        //     Client.m_Socket.CloseAsync();
-        // }
-
-        // Client.m_Client = new Nakama.Client("http", "127.0.0.1", 7350, "defaultkey");
-        // Authenticate();
+        if (Client.m_Socket != null && Client.m_Socket.IsConnected) {
+            Client.m_Client = new Nakama.Client("http", "127.0.0.1", 7350, "defaultkey");
+            Authenticate();
+        }
     }
 
     public static void Shutdown() {
