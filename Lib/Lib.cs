@@ -21,15 +21,15 @@ public class TeardownNakama {
     private static string m_DeviceID { get; set; } = "";
     private static bool m_UseSteam = false;
 
-    private static dBindCallback JoinGameCallbackFunc = new dBindCallback(Client.JoinGame);
-    private static dBindCallback DisconnectCallbackFunc = new dBindCallback(Client.Disconnect);
+    private static dBindCallback fJoinGameCallback = new dBindCallback(Client.JoinGame);
+    private static dBindCallback fDisconnectCallback = new dBindCallback(Client.Disconnect);
 
     private static CBind? ConnectGameBind;
     private static CBind? JoinGameBind;
     private static CBind? DisconnectGameBind;
 
-    private static dCallback PostPlayerUpdateCallbackFunc = new dCallback(Client.OnUpdate);
-    private static CCallback? PostPlayerUpdateCallback;
+    private static dCallback fPostPlayerUpdate = new dCallback(Client.OnUpdate);
+    private static CCallback? cb_PostPlayerUpdate;
 
     private static async void Authenticate() {
         if (Client.m_Client == null) {
@@ -62,16 +62,29 @@ public class TeardownNakama {
         }
 
         JoinGameBind = new CBind(EKeyCode.VK_N, Client.JoinGame);
-        PostPlayerUpdateCallback = new CCallback(ECallbackType.PostPlayerUpdate, PostPlayerUpdateCallbackFunc);
-
         DisconnectGameBind = new CBind(EKeyCode.VK_B, Client.Disconnect);
+        cb_PostPlayerUpdate = new CCallback(ECallbackType.PostPlayerUpdate, fPostPlayerUpdate);
+
         ConnectGameBind = new CBind(EKeyCode.VK_K, () => { // Mainly for debugging purposes to test disconnecting and reconnecting to the server
             Client.m_Client = new Nakama.Client("http", "127.0.0.1", 7350, "defaultkey");
             Authenticate();
         });
     }
 
+    public static void Reload() {
+        // if (Client.m_Socket != null && Client.m_Socket.IsConnected) {
+        //     Client.m_Socket.CloseAsync();
+        // }
+
+        // Client.m_Client = new Nakama.Client("http", "127.0.0.1", 7350, "defaultkey");
+        // Authenticate();
+    }
+
     public static void Shutdown() {
+        if (cb_PostPlayerUpdate != null) { cb_PostPlayerUpdate.Unregister(); cb_PostPlayerUpdate = null; }
+        if (JoinGameBind != null) { JoinGameBind.Unregister(); JoinGameBind = null; }
+        if (DisconnectGameBind != null) { DisconnectGameBind.Unregister(); DisconnectGameBind = null; }
+
         Client.Disconnect();
         if (Client.m_Socket != null) {
             Client.m_Socket.Dispose();
