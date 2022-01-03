@@ -118,8 +118,9 @@ public class Client {
                 foreach (var presence in player.Joins) {
                     if (m_Session != null && presence.UserId != m_Session.UserId) {
                         Log.General("A player has joined the game with id of {0}", presence.UserId);
-                        Body.SetTransform(currentPresences[presence.UserId].m_Body, new Transform(new Vector3(0, 0, 0), new Quaternion(0, 0, 0, 1)));
                         CreatePlayer(presence);
+                        Body.SetPosition(currentPresences[presence.UserId].m_Body, new Vector3((float)0, (float)0, (float)0));
+                        Body.SetTransform(currentPresences[presence.UserId].m_Body, new Transform(new Vector3(0, 0, 0), new Quaternion(0, 0, 0, 1)));
                     }
                 }
             };
