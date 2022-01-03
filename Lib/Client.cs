@@ -162,12 +162,9 @@ public class Client {
     }
 
     public static async void Disconnect() {
-        if (Client.m_Socket != null && Client.m_Socket.IsConnected) {
+        if (Client.m_Socket != null && Client.m_Socket.IsConnected && matchId != null) {
+            await m_Socket.LeaveMatchAsync(matchId);
             matchId = null;
-            m_Client = null;
-            m_Session = null;
-            await m_Socket.CloseAsync();
-            m_Socket = null;
             Log.General("Disconnected");
         } else {
             Log.General("You are not connected to a lobby");

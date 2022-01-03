@@ -72,6 +72,8 @@ public class TeardownNakama {
     }
 
     public static void Shutdown() {
+        Client.Disconnect();
+
         if (m_UseSteam)
             SteamAPI.Shutdown();
     }
