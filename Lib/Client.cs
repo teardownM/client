@@ -47,7 +47,7 @@ public class Client {
 
     public static async void JoinGame() {
         if (m_Client == null || m_Socket == null) {
-            Log.Error("No m_Client or m_Socket found when authenticating");
+            Log.Error("No client or socket found when authenticating");
             return;
         }
 
@@ -90,11 +90,15 @@ public class Client {
 
                     if (incomingData != null) {
                         foreach (var presence in incomingData) {
-                            Log.General("{0} should be moving to X: {}", presence.Key, presence.Value.x);
                             // Check to see if the incoming data is a user in our current dictionary of players
                             if (currentPresences.ContainsKey(presence.Key)) {
-                                // Update Body position with new position data
-                                Body.SetTransform(currentPresences[presence.Key].m_Body, new Transform(new Vector3((float)presence.Value.x, (float)presence.Value.y, (float)presence.Value.z), new Quaternion(0, 0, 0, 1)));
+                                if (presence.Value.x != null && presence.Value.y != null && presence.Value.z != null) {
+                                    // Set the position of the player
+                                    Log.General("Moving player {0} to {1} {2} {3}", presence.Key, presence.Value.x, presence.Value.y, presence.Value.z);
+                                    Body.SetTransform(currentPresences[presence.Key].m_Body, new Transform(new Vector3((float)presence.Value.x, (float)presence.Value.y, (float)presence.Value.z), new Quaternion(0, 0, 0, 1)));
+                                } else {
+                                    Log.General("Received invalid data from {0}", presence.Key);
+                                }
                             }
                         }
                     }
@@ -109,19 +113,18 @@ public class Client {
                 foreach (var presence in player.Joins) {
                     if (m_Session != null && presence.UserId != m_Session.UserId) {
                         Log.General("A player has joined the game with id of {0}", presence.UserId);
-                        CreatePlayer(presence);
-                        Body.SetPosition(currentPresences[presence.UserId].m_Body, new Vector3((float)0, (float)0, (float)0));
                         Body.SetTransform(currentPresences[presence.UserId].m_Body, new Transform(new Vector3(0, 0, 0), new Quaternion(0, 0, 0, 1)));
+                        CreatePlayer(presence);
                     }
                 }
             };
         };
 
-        Log.General("m_Sockets loaded");
+        Log.General("Sockets loaded");
     }
 
     public static void OnUpdate() {
-                // if the user is in the menu / doing something else, don't run this
+        // if the user is in the menu / doing something else, don't run this
         if (!Game.IsPlaying())
             return;
 
@@ -156,5 +159,18 @@ public class Client {
 
         // Every local game tick, send m_Client's position data to Nakama
         m_Socket.SendMatchStateAsync(matchId, 1, newState);
+    }
+
+    public static async void Disconnect() {
+        if (Client.m_Socket != null && Client.m_Socket.IsConnected) {
+            matchId = null;
+            m_Client = null;
+            m_Session = null;
+            await m_Socket.CloseAsync();
+            m_Socket = null;
+            Log.General("Disconnected");
+        } else {
+            Log.General("You are not connected to a lobby");
+        }
     }
 }

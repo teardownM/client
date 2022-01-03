@@ -19,12 +19,16 @@ class IPlayer : IUserPresence {
 
 public class TeardownNakama {
     private static string m_DeviceID { get; set; } = "";
-    private static bool m_UseSteam = true;
+    private static bool m_UseSteam = false;
 
     private static dBindCallback JoinGameCallbackFunc = new dBindCallback(Client.JoinGame);
-    private static dCallback PostPlayerUpdateCallbackFunc = new dCallback(Client.OnUpdate);
+    private static dBindCallback DisconnectCallbackFunc = new dBindCallback(Client.Disconnect);
 
+    private static CBind? ConnectGameBind;
     private static CBind? JoinGameBind;
+    private static CBind? DisconnectGameBind;
+
+    private static dCallback PostPlayerUpdateCallbackFunc = new dCallback(Client.OnUpdate);
     private static CCallback? PostPlayerUpdateCallback;
 
     private static async void Authenticate() {
@@ -60,14 +64,14 @@ public class TeardownNakama {
         JoinGameBind = new CBind(EKeyCode.VK_N, Client.JoinGame);
         PostPlayerUpdateCallback = new CCallback(ECallbackType.PostPlayerUpdate, PostPlayerUpdateCallbackFunc);
 
-        // Creates Nakama client
-        Client.m_Client = new Nakama.Client("http", "127.0.0.1", 7350, "defaultkey");
-        Authenticate();
+        DisconnectGameBind = new CBind(EKeyCode.VK_B, Client.Disconnect);
+        ConnectGameBind = new CBind(EKeyCode.VK_K, () => { // Mainly for debugging purposes to test disconnecting and reconnecting to the server
+            Client.m_Client = new Nakama.Client("http", "127.0.0.1", 7350, "defaultkey");
+            Authenticate();
+        });
     }
 
     public static void Shutdown() {
-        Log.General("Teardown Nakama shutting down");
-
         if (m_UseSteam)
             SteamAPI.Shutdown();
     }
