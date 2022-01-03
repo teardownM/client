@@ -47,7 +47,20 @@ public class TeardownNakama {
         Client.InitializeListeners();
     }
 
-    public static void Init() {
+    private static void InitializeBindsAndCallbacks() {
+        cb_PostPlayerUpdate = new CCallback(ECallbackType.PostPlayerUpdate, fPostPlayerUpdate);
+
+        JoinGameBind = new CBind(EKeyCode.VK_N, fJoinGameCallback);
+        DisconnectGameBind = new CBind(EKeyCode.VK_B, fDisconnectCallback);
+        ConnectGameBind = new CBind(EKeyCode.VK_K, () => { // Mainly for debugging purposes to test disconnecting and reconnecting to the server
+            Client.m_Client = new Nakama.Client("http", "127.0.0.1", 7350, "defaultkey");
+            Authenticate();
+        });
+    }
+
+    public static void OnInitialize() {
+        Log.General("OnInitialize");
+
         if (m_UseSteam) {
             if (SteamAPI.Init()) {
                 Log.General("SteamAPI initialized");
@@ -61,30 +74,33 @@ public class TeardownNakama {
             m_DeviceID = Guid.NewGuid().ToString();
         }
 
-        JoinGameBind = new CBind(EKeyCode.VK_N, Client.JoinGame);
-        DisconnectGameBind = new CBind(EKeyCode.VK_B, Client.Disconnect);
-        cb_PostPlayerUpdate = new CCallback(ECallbackType.PostPlayerUpdate, fPostPlayerUpdate);
-
-        ConnectGameBind = new CBind(EKeyCode.VK_K, () => { // Mainly for debugging purposes to test disconnecting and reconnecting to the server
-            Client.m_Client = new Nakama.Client("http", "127.0.0.1", 7350, "defaultkey");
-            Authenticate();
-        });
+        InitializeBindsAndCallbacks();
     }
 
-    public static void Reload() {
-        if (Client.m_Socket != null && Client.m_Socket.IsConnected) {
-            Client.m_Client = new Nakama.Client("http", "127.0.0.1", 7350, "defaultkey");
-            Authenticate();
+    public static void OnReload() {
+        if (Client.m_Socket != null) {
+            if (Client.m_Socket.IsConnected) {
+                Client.Disconnect();
+            }
+
+            Client.m_Socket.Dispose();
+            Client.m_Socket = null;
         }
     }
 
-    public static void Shutdown() {
+    public static void OnShutdown() {
+        Log.General("OnShutdown");
+        
         if (cb_PostPlayerUpdate != null) { cb_PostPlayerUpdate.Unregister(); cb_PostPlayerUpdate = null; }
-        if (JoinGameBind != null) { JoinGameBind.Unregister(); JoinGameBind = null; }
-        if (DisconnectGameBind != null) { DisconnectGameBind.Unregister(); DisconnectGameBind = null; }
+        if (JoinGameBind != null) { JoinGameBind.Unregister(); }
+        if (DisconnectGameBind != null) { DisconnectGameBind.Unregister(); }
+        if (ConnectGameBind != null) { ConnectGameBind.Unregister(); }
 
-        Client.Disconnect();
         if (Client.m_Socket != null) {
+            if (Client.m_Socket.IsConnected) {
+                Client.Disconnect();
+            }
+
             Client.m_Socket.Dispose();
             Client.m_Socket = null;
         }
