@@ -101,13 +101,9 @@ public class Client {
                         foreach (var presence in incomingData) {
                             // Check to see if the incoming data is a user in our current dictionary of players
                             if (currentPresences.ContainsKey(presence.Key)) {
-                                if (presence.Value.x != null && presence.Value.y != null && presence.Value.z != null) {
-                                    // Set the position of the player
-                                    // Log.General("Moving player {0} to {1} {2} {3}", presence.Key, presence.Value.x, presence.Value.y, presence.Value.z);
-                                    Body.SetTransform(currentPresences[presence.Key].m_Body, new Transform(new Vector3((float)presence.Value.x, (float)presence.Value.y, (float)presence.Value.z), new Quaternion(0, 0, 0, 1)));
-                                } else {
-                                    Log.General("Received invalid data from {0}", presence.Key);
-                                }
+                                // Set the position of the player
+                                // Log.General("Moving player {0} to {1} {2} {3}", presence.Key, presence.Value.x, presence.Value.y, presence.Value.z);
+                                Body.SetTransform(currentPresences[presence.Key].m_Body, new Transform(new Vector3((float)presence.Value.x, (float)presence.Value.y, (float)presence.Value.z), new Quaternion(0, 0, 0, 1)));
                             }
                         }
                     }
