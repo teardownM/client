@@ -64,14 +64,14 @@ public class TeardownNakama {
     public static void OnInitialize() {
         Log.General("OnInitialize");
 
-        if (m_UseSteam) {
-            if (SteamAPI.Init()) {
-                Log.General("SteamAPI initialized");
-            } else {
-                Log.Error("SteamAPI failed to initialize");
-                return;
-            }
+        if (SteamAPI.Init()) {
+            Log.General("SteamAPI initialized");
+        } else {
+            Log.Error("SteamAPI failed to initialize");
+            return;
+        }
 
+        if (m_UseSteam) {
             m_DeviceID = SteamUser.GetSteamID().ToString();
         } else {
             m_DeviceID = Guid.NewGuid().ToString();
@@ -108,7 +108,6 @@ public class TeardownNakama {
             Client.m_Socket = null;
         }
 
-        if (m_UseSteam)
-            SteamAPI.Shutdown();
+        SteamAPI.Shutdown();
     }
 }

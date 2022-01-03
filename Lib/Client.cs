@@ -69,16 +69,15 @@ public class Client {
 
         IMatch match = await m_Socket.JoinMatchAsync(matchId);
 
-        Log.General("Joined game with id: {0}", matchId);
         if (m_Session != null)
-            Log.General("Current local user id: {0}", m_Session.UserId);
+            Log.General("Current local UserID: {0}", m_Session.UserId);
 
         // All the players already in the game
         // TODO: Figure out spawning of each player
         //       Remember that the current local player is included in here too! Make sure you add a guard check for that (user_id != m_Session.user_id)
         foreach (IUserPresence presence in match.Presences) {
             if (m_Session != null && presence.UserId != m_Session.UserId) {
-                Log.General("Found user id '{0}' already in the game", presence.UserId);
+                Log.General("User Already In-Game: {0}", presence.UserId);
                 CreatePlayer(presence);
             }
         }
@@ -114,7 +113,7 @@ public class Client {
             if (player.Joins.Any()) {
                 foreach (var presence in player.Joins) {
                     if (m_Session != null && presence.UserId != m_Session.UserId) {
-                        Log.General("A player has joined the game with id of {0}", presence.UserId);
+                        Log.General("{0} has joined the game", presence.UserId);
                         CreatePlayer(presence);
                         Body.SetPosition(currentPresences[presence.UserId].m_Body, new Vector3((float)0, (float)0, (float)0));
                         Body.SetTransform(currentPresences[presence.UserId].m_Body, new Transform(new Vector3(0, 0, 0), new Quaternion(0, 0, 0, 1)));
