@@ -24,6 +24,8 @@ public class Client {
     }
 
     public static void CreatePlayer(IUserPresence presence) {
+        // Error when re-connecting: An item with the same key has already been added: userId
+
         // Create a static body for the player, set their position
         uint m_Body = Body.Create();
         Body.SetDynamic(m_Body, false);
@@ -46,6 +48,8 @@ public class Client {
     }
 
     public static async void JoinGame() {
+        // Error: Only one client can see the other
+
         if (m_Client == null || m_Socket == null) {
             Log.Error("No client or socket found when authenticating");
             return;
