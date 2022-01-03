@@ -173,6 +173,7 @@ public class Client {
             await m_Socket.LeaveMatchAsync(matchId);
             matchId = null;
             Log.General("Disconnected");
+            currentPresences = new();
         } else {
             Log.General("You are not connected to a lobby");
         }
