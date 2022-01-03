@@ -64,9 +64,7 @@ public class TeardownNakama {
         Authenticate();
     }
 
-    public static void OnInitialize() {
-        Log.General("OnInitialize");
-
+    public static void Init() {
         if (SteamAPI.Init()) {
             Log.General("SteamAPI initialized");
         } else {
@@ -83,7 +81,7 @@ public class TeardownNakama {
         InitializeBindsAndCallbacks();
     }
 
-    public static void OnReload() {
+    public static void Reload() {
         if (Client.m_Socket != null) {
             if (Client.m_Socket.IsConnected) {
                 Client.Disconnect();
@@ -103,9 +101,7 @@ public class TeardownNakama {
         Authenticate();
     }
 
-    public static void OnShutdown() {
-        Log.General("OnShutdown");
-        
+    public static void Shutdown() {
         if (cb_PostPlayerUpdate != null) { cb_PostPlayerUpdate.Unregister(); cb_PostPlayerUpdate = null; }
         if (JoinGameBind != null) { JoinGameBind.Unregister(); }
         if (DisconnectGameBind != null) { DisconnectGameBind.Unregister(); }
