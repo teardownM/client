@@ -85,8 +85,10 @@ public class Client {
     }
 
     public static void InitializeListeners() {
-        if (m_Socket == null || m_Session == null && matchId != null)
+        if (m_Socket == null || m_Session == null && matchId != null) {
+            Log.Error("No socket or session found when initializing listeners");
             return;
+        }
 
         // This will get run every server tick (currently a tickrate of 28)
         m_Socket.ReceivedMatchState += newState => {
@@ -101,7 +103,7 @@ public class Client {
                             if (currentPresences.ContainsKey(presence.Key)) {
                                 if (presence.Value.x != null && presence.Value.y != null && presence.Value.z != null) {
                                     // Set the position of the player
-                                    Log.General("Moving player {0} to {1} {2} {3}", presence.Key, presence.Value.x, presence.Value.y, presence.Value.z);
+                                    // Log.General("Moving player {0} to {1} {2} {3}", presence.Key, presence.Value.x, presence.Value.y, presence.Value.z);
                                     Body.SetTransform(currentPresences[presence.Key].m_Body, new Transform(new Vector3((float)presence.Value.x, (float)presence.Value.y, (float)presence.Value.z), new Quaternion(0, 0, 0, 1)));
                                 } else {
                                     Log.General("Received invalid data from {0}", presence.Key);
