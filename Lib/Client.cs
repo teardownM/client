@@ -55,6 +55,9 @@ public class Client {
             return;
         }
 
+        if (matchId != null)
+            Disconnect();
+
         /*
          * We currently create 1 match on startup of our Nakama server.
          * This is just for testing purposes, in the future there'll be a server browser.
