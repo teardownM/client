@@ -4,18 +4,20 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 class ClientDataConverter : JsonConverter  {
-    public override void WriteJson(Newtonsoft.Json.JsonWriter writer, object value, JsonSerializer serializer) {
+    public override void WriteJson(Newtonsoft.Json.JsonWriter writer, object? value, JsonSerializer serializer) {
         Log.General("Writing json");
-        var list = (UserID)value;
+        UserID? list = (UserID?)value;
 
-        writer.WriteStartObject();
+        if (list != null) {
+            writer.WriteStartObject();
 
-        foreach (var item in list.ClientData) {
-            writer.WritePropertyName(item.user_id);
-            serializer.Serialize(writer, item);
+            foreach (var item in list.ClientData) {
+                writer.WritePropertyName(item.user_id);
+                serializer.Serialize(writer, item);
+            }
+
+            writer.WriteEndObject();
         }
-
-        writer.WriteEndObject();
     }
 
     public override object ReadJson(Newtonsoft.Json.JsonReader reader, Type objectType, object? existingValue, JsonSerializer serializer) {
@@ -23,10 +25,14 @@ class ClientDataConverter : JsonConverter  {
         var result = new UserID();
         result.ClientData = new List<IClientData>();
 
-        foreach (var item in jo.Properties()) {
-            var p = item.Value.ToObject<IClientData>();
-            p.user_id = item.Name;
-            result.ClientData.Add(p);
+        if (jo != null) {
+            foreach (var item in jo.Properties()) {
+                var p = item.Value.ToObject<IClientData>();
+                    if (p != null) {
+                    p.user_id = item.Name;
+                    result.ClientData.Add(p);
+                }
+            }
         }
 
         return result;
