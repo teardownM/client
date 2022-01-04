@@ -116,7 +116,7 @@ public class Client {
                         Log.General("{0} has joined the game", presence.UserId);
                         CreatePlayer(presence);
                         Body.SetPosition(currentPresences[presence.UserId].m_Body, new Vector3((float)0, (float)0, (float)0));
-                        Body.SetTransform(currentPresences[presence.UserId].m_Body, new Transform(new Vector3(0, 0, 0), new Quaternion(0, 0, 0, 1)));
+                        Body.SetRotation(currentPresences[presence.UserId].m_Body, new Quaternion(0, 0.7071068f, 0.7071068f, 0));
                     }
                 }
             };
@@ -133,7 +133,8 @@ public class Client {
             if (m_Session != null && presence.Key != m_Session.UserId && !presence.Value.voxelLoaded) {
                 Shape.LoadVox(presence.Value.m_Shape, "Assets/Vox/player.vox", "", 1.0f);
                 Shape.SetCollisionFilter(presence.Value.m_Shape, 0, 0);
-                Body.SetTransform(presence.Value.m_Body, new Transform(new Vector3(50, 10, 10), new Quaternion(0, 0, 0, 1)));
+                Body.SetPosition(presence.Value.m_Body, new Vector3((float)0, (float)0, (float)0));
+                Body.SetRotation(presence.Value.m_Body, new Quaternion(0, 0.7071068f, 0.7071068f, 0));
                 presence.Value.voxelLoaded = true;
 
                 Log.General("{0}: Voxel Loaded", presence.Key);
