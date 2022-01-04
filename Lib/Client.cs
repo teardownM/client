@@ -16,6 +16,8 @@ public class Client {
     public static IClient? m_Connection { get; set; }
     public static ISocket? m_Socket { get; set; }
 
+    public static bool m_bConnecting { get; set; } = false;
+
     private static Vector3 m_PrevPosition = Vector3.Zero;
 
     private static Dictionary<string, IPlayer> currentPresences = new();
@@ -51,28 +53,46 @@ public class Client {
         if (player.Joins.Any()) {
             foreach (var presence in player.Joins) {
                 if (m_Session != null && presence.UserId != m_Session.UserId) {
-                    Log.General("{0} has joined the game", presence.UserId);
                     CreatePlayer(presence);
-                    Body.SetPosition(currentPresences[presence.UserId].m_Body, new Vector3((float)0, (float)0, (float)0));
-                    Body.SetRotation(currentPresences[presence.UserId].m_Body, new Quaternion(0, 0.7071068f, 0.7071068f, 0));
+                    SpawnModel(presence);
                 }
             }
         } else if (player.Leaves.Any()) {
             foreach (var presence in player.Leaves) {
                 if (m_Session != null && presence.UserId != m_Session.UserId) {
+                    currentPresences.Remove(presence.UserId);
                     Log.General("{0} has left the game", presence.UserId);
                 }
             }
 
             foreach (var presence in currentPresences) {
-                if (m_Session != null && presence.Key != m_Session.UserId && presence.Value.voxelLoaded) {
+                if (m_Session != null && presence.Key != m_Session.UserId) {
                     Body.Destroy(presence.Value.m_Body);
-                    presence.Value.voxelLoaded = false;
+                    Log.General("Destroying");
                 }
             }
-
-            // Disconnect();
         }
+    }
+
+    public static void OnLevelLoad() {
+        if (!m_bConnecting)
+            return;
+
+        JoinGame();
+        m_bConnecting = false;
+    }
+
+    private static void SpawnModel(IUserPresence? presence) {
+        if (presence == null)
+            return;
+
+        Shape.LoadVox(currentPresences[presence.UserId].m_Shape, "Assets/Vox/player.vox", "", 1.0f);
+        Shape.SetCollisionFilter(currentPresences[presence.UserId].m_Shape, 0, 0);
+        Body.SetDynamic(currentPresences[presence.UserId].m_Body, false);
+        Body.SetPosition(currentPresences[presence.UserId].m_Body, new Vector3((float)0, (float)0, (float)0));
+        Body.SetRotation(currentPresences[presence.UserId].m_Body, new Quaternion(0, 0, 0, 0));
+
+        Log.General("{0}: Spawned Model", presence.UserId);
     }
 
     private static void InitializeListeners() {
@@ -104,8 +124,6 @@ public class Client {
 
         m_Session = await m_Connection.AuthenticateDeviceAsync(m_DeviceID, m_DeviceID);
 
-        Log.General("Authentication Successful");
-
         m_Socket = Socket.From(m_Connection);
         await m_Socket.ConnectAsync(m_Session);
 
@@ -119,20 +137,19 @@ public class Client {
         }
 
         Authenticate();
+        m_bConnecting = true;
 
+        Log.General("Connecting to {0}:{1}", ip, port);
         // TODO: Join game: need to be able to load the map and get the map from the server
     }
 
     // General Functions
     public static void CreatePlayer(IUserPresence presence) {
         uint m_Body = Body.Create();
-        Body.SetDynamic(m_Body, false);
-        Body.SetPosition(m_Body, new Vector3(0, -100, 0));
 
         IPlayer newPlayer = new() {
             m_Body = m_Body,
             m_Shape = Shape.Create(m_Body),
-            voxelLoaded = false,
             Persistence = presence.Persistence,
             SessionId = presence.SessionId,
             Status = presence.Status,
@@ -141,7 +158,7 @@ public class Client {
         };
 
         currentPresences.Add(presence.UserId, newPlayer);
-        Log.General("{0}: Added player into currentPlayers", presence.UserId);
+        Log.General("{0} has joined the game", presence.UserId);
     }
 
     public static async void JoinGame() {
@@ -174,26 +191,17 @@ public class Client {
             if (m_Session != null && presence.UserId != m_Session.UserId) {
                 Log.General("User Already In-Game: {0}", presence.UserId);
                 CreatePlayer(presence);
+                SpawnModel(presence);
             }
         }
     }
 
     public static void OnUpdate() {
-        // if the user is in the menu / doing something else, don't run this
-        if (!Game.IsPlaying())
+        if (Game.GetState() != EGameState.Playing) {
+            if (m_MatchID != null)
+                Disconnect();
+
             return;
-
-        foreach (var presence in currentPresences) {
-            // If it's not the local player, load in their vox player model
-            if (m_Session != null && presence.Key != m_Session.UserId && !presence.Value.voxelLoaded) {
-                Shape.LoadVox(presence.Value.m_Shape, "Assets/Vox/player.vox", "", 1.0f);
-                Shape.SetCollisionFilter(presence.Value.m_Shape, 0, 0);
-                Body.SetPosition(presence.Value.m_Body, new Vector3((float)0, (float)0, (float)0));
-                Body.SetRotation(presence.Value.m_Body, new Quaternion(0, 0.7071068f, 0.7071068f, 0));
-                presence.Value.voxelLoaded = true;
-
-                Log.General("{0}: Player Model Created", presence.Key);
-            }
         }
 
         if (m_Socket == null || m_Session == null || m_MatchID == null)
@@ -226,19 +234,24 @@ public class Client {
                 { "rotationW", playerTransform.Rotation.W }
             }.ToJson();
 
-            // Every local game tick, send m_Connection's position data to Nakama
             m_Socket.SendMatchStateAsync(m_MatchID, (int)OP_CODES.PLAYER_POS, newState);
         }
     }
 
     public static async void Disconnect() {
+        m_bConnecting = false;
+
         if (Client.m_Socket != null && Client.m_Session != null && m_MatchID != null) {
             await m_Socket.LeaveMatchAsync(m_MatchID);
             m_MatchID = null;
             m_Session = null;
+            m_Socket = null;
             currentPresences = new();
 
             Log.General("Disconnected");
+
+            if (Game.GetState() != EGameState.Menu)
+                Game.SetState(EGameState.Menu);
         } else {
             Log.General("You are not connected to a lobby");
         }
