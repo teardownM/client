@@ -10,7 +10,7 @@ using System.Text;
 using System.Numerics;
 
 public class Client {
-    private static string? matchId;
+    private static string? m_MatchID;
     public static ISession? m_Session { get; set; }
     public static IClient? m_Client { get; set; }
     public static ISocket? m_Socket { get; set; }
@@ -51,7 +51,7 @@ public class Client {
             return;
         }
 
-        if (matchId != null)
+        if (m_MatchID != null)
             Disconnect();
 
         /*
@@ -61,9 +61,9 @@ public class Client {
          * This function sends an api request to fetch the match id and then joins that match
          */
         IApiRpc response = await m_Client.RpcAsync(m_Session, "get_match_id");
-        matchId = response.Payload.Trim(new char[] { '"' });
+        m_MatchID = response.Payload.Trim(new char[] { '"' });
 
-        IMatch match = await m_Socket.JoinMatchAsync(matchId);
+        IMatch match = await m_Socket.JoinMatchAsync(m_MatchID);
 
         if (m_Session != null)
             Log.General("Current local UserID: {0}", m_Session.UserId);
@@ -78,7 +78,7 @@ public class Client {
     }
 
     public static void InitializeListeners() {
-        if (m_Socket == null || m_Session == null && matchId != null) {
+        if (m_Socket == null || m_Session == null && m_MatchID != null) {
             Log.Error("No socket or session found when initializing listeners");
             return;
         }
@@ -142,7 +142,7 @@ public class Client {
             }
         }
 
-        if (m_Socket == null || m_Session == null || matchId == null)
+        if (m_Socket == null || m_Session == null || m_MatchID == null)
             return;
 
         Vector2 playerInput = Player.GetPlayerMovementInput();
@@ -160,11 +160,11 @@ public class Client {
         }.ToJson();
 
         // Every local game tick, send m_Client's position data to Nakama
-        m_Socket.SendMatchStateAsync(matchId, 1, newState);
+        m_Socket.SendMatchStateAsync(m_MatchID, 1, newState);
     }
 
     public static async void Disconnect() {
-        if (Client.m_Socket != null && Client.m_Socket.IsConnected && matchId != null) {
+        if (Client.m_Socket != null && Client.m_Socket.IsConnected && m_MatchID != null) {
             foreach (var presence in currentPresences) {
                 // If it's not the local player, load in their vox player model
                 if (m_Session != null && presence.Key != m_Session.UserId && presence.Value.voxelLoaded) {
@@ -176,8 +176,8 @@ public class Client {
                 }
             }
 
-            await m_Socket.LeaveMatchAsync(matchId);
-            matchId = null;
+            await m_Socket.LeaveMatchAsync(m_MatchID);
+            m_MatchID = null;
             Log.General("Disconnected");
             currentPresences = new();
         } else {
