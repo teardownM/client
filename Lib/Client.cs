@@ -4,7 +4,6 @@ using Nakama;
 using Nakama.TinyJson;
 
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 
 using System.Text;
 using System.Numerics;
@@ -18,6 +17,8 @@ public class Client {
 
     private static uint tempShape = 0;
     private static uint tempBody = 0;
+
+    private static bool m_bCanUpdatePlayer = false;
 
     public static bool m_bConnecting { get; set; } = false;
 
@@ -33,6 +34,9 @@ public class Client {
 
     // Listeners
     private static void Listener_UpdatePosition(IMatchState newState) {
+        if (!m_bCanUpdatePlayer)
+            return;
+
         string stringJson = Encoding.Default.GetString(newState.State);
         UserID? data = JsonConvert.DeserializeObject<UserID>(stringJson);
 
@@ -41,14 +45,36 @@ public class Client {
                 if (data.ClientData[i] != null) {
                     IClientData client = data.ClientData[i];
                     if (currentPresences.ContainsKey(client.user_id)) {
-                        float x = (float)Math.Round((float)client.x);
-                        float y = (float)Math.Round((float)client.y);
-                        float z = (float)Math.Round((float)client.z);
+                        if (m_Session != null && client.user_id != m_Session.UserId) {
+                            // float x = (float)Math.Round((float)client.x);
+                            // float y = (float)Math.Round((float)client.y);
+                            // float z = (float)Math.Round((float)client.z);
 
-                        // Body.SetTransform(currentPresences[client.user_id].m_Body, new Transform(new Vector3(x, y, z), new Quaternion(0, 0.7071068f, 0.7071068f, 0)));
+                            float x = 0;
+                            float y = 0;
+                            float z = 0;
+
+                            Body.SetPosition(currentPresences[client.user_id].m_Body, new Vector3(x, y, z));
+                            Body.SetRotation(currentPresences[client.user_id].m_Body, new Quaternion(0, 0.7071068f, 0.7071068f, 0));
+                        }
                     }
                 }
             }
+        }
+
+        m_bCanUpdatePlayer = false;
+    }
+
+    public static void OnPlayerUpdate() {
+        if (Game.GetState() == EGameState.Playing) { // TODO: Don't need this so remove.
+            m_bCanUpdatePlayer = true;
+            // Quaternion camRot = Player.GetCameraTransform().Rotation;
+            // Quaternion rot = new Quaternion(0, 0.7071068f, 0.7071068f, 0);
+
+            // camRot = Quaternion.Multiply(camRot, rot);
+        
+            // Body.SetPosition(tempBody, new Vector3((float)0, (float)0, (float)0));
+            // Body.SetRotation(tempBody, camRot);
         }
     }
 
@@ -70,7 +96,7 @@ public class Client {
 
             foreach (var presence in currentPresences) {
                 if (m_Session != null && presence.Key != m_Session.UserId) {
-                    // Body.Destroy(presence.Value.m_Body);
+                    Body.Destroy(presence.Value.m_Body);
                     Log.General("Destroying");
                 }
             }
@@ -85,14 +111,14 @@ public class Client {
             JoinGame();
             m_bConnecting = false;
 
-            tempBody = Body.Create();
-            tempShape = Shape.Create(tempBody);
+            // tempBody = Body.Create();
+            // tempShape = Shape.Create(tempBody);
 
-            Shape.LoadVox(tempShape, "Assets/Vox/player.vox", "", 1.0f);
+            // Shape.LoadVox(tempShape, "Assets/Vox/player.vox", "", 1.0f);
             // Shape.SetCollisionFilter(currentPresences[presence.UserId].m_Shape, 0, 0);
             // Body.SetDynamic(tempBody, false);
-            Body.SetPosition(tempBody, new Vector3((float)0, (float)0, (float)0));
-            Body.SetRotation(tempBody, new Quaternion(0, 0.7071068f, 0.7071068f, 0));
+            // Body.SetPosition(tempBody, new Vector3((float)0, (float)0, (float)0));
+            // Body.SetRotation(tempBody, new Quaternion(0, 0.7071068f, 0.7071068f, 0));
         } else if (iState == (uint)EGameState.Menu) {
             if (m_MatchID != null)
                 Disconnect();
@@ -100,12 +126,12 @@ public class Client {
     }
 
     private static void SpawnModel(IUserPresence? presence) {
-        // if (presence == null)
-        //     return;
+        if (presence == null)
+            return;
 
-        Shape.LoadVox(currentPresences[presence.UserId].m_Shape, "Assets/Vox/player.vox", "", 10.0f);
+        Shape.LoadVox(currentPresences[presence.UserId].m_Shape, "Assets/Vox/player.vox", "", 1.0f);
         // Shape.SetCollisionFilter(currentPresences[presence.UserId].m_Shape, 0, 0);
-        Body.SetDynamic(currentPresences[presence.UserId].m_Body, false);
+        // Body.SetDynamic(currentPresences[presence.UserId].m_Body, false);
         Body.SetPosition(currentPresences[presence.UserId].m_Body, new Vector3((float)0, (float)0, (float)0));
         Body.SetRotation(currentPresences[presence.UserId].m_Body, new Quaternion(0, 0.7071068f, 0.7071068f, 0));
 
@@ -211,18 +237,6 @@ public class Client {
                 CreatePlayer(presence);
                 SpawnModel(presence);
             }
-        }
-    }
-
-    public static void OnPlayerUpdate() {
-        if (Game.GetState() == EGameState.Playing) {
-            Quaternion camRot = Player.GetCameraTransform().Rotation;
-            Quaternion rot = new Quaternion(0, 0.7071068f, 0.7071068f, 0);
-
-            camRot = Quaternion.Multiply(camRot, rot);
-        
-            Body.SetPosition(tempBody, new Vector3((float)0, (float)0, (float)0));
-            Body.SetRotation(tempBody, camRot);
         }
     }
 
