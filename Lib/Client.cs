@@ -2,7 +2,6 @@ using SledgeLib;
 
 using Nakama;
 using Nakama.TinyJson;
-using Steamworks;
 
 using Newtonsoft.Json;
 
@@ -24,8 +23,6 @@ public class Client {
     }
 
     public static void CreatePlayer(IUserPresence presence) {
-        // Error when re-connecting: An item with the same key has already been added: userId
-
         // Create a static body for the player, set their position
         uint m_Body = Body.Create();
         Body.SetDynamic(m_Body, false);

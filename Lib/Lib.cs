@@ -97,6 +97,8 @@ public class TeardownNakama {
 
         Client.m_Client = new Nakama.Client("http", "127.0.0.1", 7350, "defaultkey");
         Authenticate();
+
+        InitializeBindsAndCallbacks();
     }
 
     public static void OnShutdown() {
