@@ -43,6 +43,7 @@ public class Client {
                         float z = (float)Math.Round((float)client.z);
 
                         Body.SetTransform(currentPresences[client.user_id].m_Body, new Transform(new Vector3(x, y, z), new Quaternion(0, 0.7071068f, 0.7071068f, 0)));
+                        Log.General("Moving to {0}, {1}, {2}", x, y, z);
                     }
                 }
             }
@@ -74,25 +75,30 @@ public class Client {
         }
     }
 
-    public static void OnLevelLoad() {
-        if (!m_bConnecting)
-            return;
+    public static void OnStateChange(uint iState) {
+        if (iState == (uint)EGameState.Playing) {
+            if (!m_bConnecting)
+                return;
 
-        JoinGame();
-        m_bConnecting = false;
+            JoinGame();
+            m_bConnecting = false;
+        } else if (iState == (uint)EGameState.Menu) {
+            if (m_MatchID != null)
+                Disconnect();
+        }
     }
 
     private static void SpawnModel(IUserPresence? presence) {
         if (presence == null)
             return;
 
-        Shape.LoadVox(currentPresences[presence.UserId].m_Shape, "Assets/Vox/player.vox", "", 1.0f);
+        Shape.LoadVox(currentPresences[presence.UserId].m_Shape, "Assets/Vox/player.vox", "", 10.0f);
         Shape.SetCollisionFilter(currentPresences[presence.UserId].m_Shape, 0, 0);
         Body.SetDynamic(currentPresences[presence.UserId].m_Body, false);
         Body.SetPosition(currentPresences[presence.UserId].m_Body, new Vector3((float)0, (float)0, (float)0));
-        Body.SetRotation(currentPresences[presence.UserId].m_Body, new Quaternion(0, 0, 0, 0));
+        Body.SetRotation(currentPresences[presence.UserId].m_Body, new Quaternion(0, 0.7071068f, 0.7071068f, 0));
 
-        Log.General("{0}: Spawned Model", presence.UserId);
+        Log.General("{0}: Spawned Model. BodyID: {1}", presence.UserId, currentPresences[presence.UserId].m_Body);
     }
 
     private static void InitializeListeners() {
@@ -146,6 +152,7 @@ public class Client {
     // General Functions
     public static void CreatePlayer(IUserPresence presence) {
         uint m_Body = Body.Create();
+        Log.General("Body ID: {0}", m_Body);
 
         IPlayer newPlayer = new() {
             m_Body = m_Body,
@@ -197,13 +204,6 @@ public class Client {
     }
 
     public static void OnUpdate() {
-        if (Game.GetState() != EGameState.Playing) {
-            if (m_MatchID != null)
-                Disconnect();
-
-            return;
-        }
-
         if (m_Socket == null || m_Session == null || m_MatchID == null)
             return;
 
