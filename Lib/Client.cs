@@ -48,8 +48,6 @@ public class Client {
     }
 
     public static async void JoinGame() {
-        // Error: Only one client can see the other
-
         if (m_Client == null || m_Socket == null) {
             Log.Error("No client or socket found when authenticating");
             return;
@@ -73,8 +71,6 @@ public class Client {
             Log.General("Current local UserID: {0}", m_Session.UserId);
 
         // All the players already in the game
-        // TODO: Figure out spawning of each player
-        //       Remember that the current local player is included in here too! Make sure you add a guard check for that (user_id != m_Session.user_id)
         foreach (IUserPresence presence in match.Presences) {
             if (m_Session != null && presence.UserId != m_Session.UserId) {
                 Log.General("User Already In-Game: {0}", presence.UserId);
