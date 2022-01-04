@@ -11,8 +11,9 @@ using System.Numerics;
 
 public class Client {
     private static string? m_MatchID;
+    public static string m_DeviceID = "";
     public static ISession? m_Session { get; set; }
-    public static IClient? m_Client { get; set; }
+    public static IClient? m_Connection { get; set; }
     public static ISocket? m_Socket { get; set; }
 
     private static Dictionary<string, IPlayer> currentPresences = new();
@@ -23,13 +24,95 @@ public class Client {
         SPAWN_ALL = 3
     }
 
+    // Listeners
+    private static void Listener_UpdatePosition(IMatchState newState) {
+        string stringJson = Encoding.Default.GetString(newState.State);
+        UserID? data = JsonConvert.DeserializeObject<UserID>(stringJson);
+
+        if (data != null) {
+            for (int i = 0; i < 32; i++) { // 32 is the max number of players?
+                if (data.ClientData[i] != null) {
+                    IClientData client = data.ClientData[i];
+                    if (currentPresences.ContainsKey(client.user_id)) {
+                        float x = (float)Math.Round((float)client.x);
+                        float y = (float)Math.Round((float)client.y);
+                        float z = (float)Math.Round((float)client.z);
+
+                        Body.SetTransform(currentPresences[client.user_id].m_Body, new Transform(new Vector3(x, y, z), new Quaternion(0, 0.7071068f, 0.7071068f, 0)));
+                    }
+                }
+            }
+        }
+    }
+
+    private static void Listener_PlayerJoin(IMatchPresenceEvent player) {
+        if (player.Joins.Any()) {
+            foreach (var presence in player.Joins) {
+                if (m_Session != null && presence.UserId != m_Session.UserId) {
+                    Log.General("{0} has joined the game", presence.UserId);
+                    CreatePlayer(presence);
+                    Body.SetPosition(currentPresences[presence.UserId].m_Body, new Vector3((float)0, (float)0, (float)0));
+                    Body.SetRotation(currentPresences[presence.UserId].m_Body, new Quaternion(0, 0.7071068f, 0.7071068f, 0));
+                }
+            }
+        };
+    }
+
+    private static void InitializeListeners() {
+        if (m_Socket == null || m_Session == null && m_MatchID != null) {
+            Log.Error("No socket or session found when initializing listeners");
+            return;
+        }
+
+        // This will get run every server tick (currently a tickrate of 28)
+        m_Socket.ReceivedMatchState += newState => {
+            switch (newState.OpCode) {
+                case (ushort)OP_CODES.PLAYER_POS:
+                    Listener_UpdatePosition(newState);
+                    break;
+                default:
+                    Log.Error("Unknown opcode: {0}", newState.OpCode);
+                    return;
+            }
+        };
+
+        m_Socket.ReceivedMatchPresence += player => Listener_PlayerJoin(player);
+    }
+
+    // Connections
+    private static async void Authenticate() {
+        if (m_Connection == null) {
+            Log.Error("No client found when authenticating");
+            return;
+        }
+
+        m_Session = await m_Connection.AuthenticateDeviceAsync(m_DeviceID, m_DeviceID);
+
+        Log.General("Authentication Successful");
+
+        m_Socket = Socket.From(m_Connection);
+        await m_Socket.ConnectAsync(m_Session);
+
+        InitializeListeners();
+    }
+
+    public static void Connect(string ip, int port) {
+        m_Connection = new Nakama.Client("http", ip, port, "defaultkey");
+        if (m_Connection == null) {
+            Log.General("Failed to connect to server");
+        }
+
+        Authenticate();
+
+        // TODO: Join game: need to be able to load the map and get the map from the server
+    }
+
+    // General Functions
     public static void CreatePlayer(IUserPresence presence) {
-        // Create a static body for the player, set their position
         uint m_Body = Body.Create();
         Body.SetDynamic(m_Body, false);
         Body.SetPosition(m_Body, new Vector3(0, -100, 0));
 
-        // Add user to our current dictionary of players
         IPlayer newPlayer = new() {
             m_Body = m_Body,
             m_Shape = Shape.Create(m_Body),
@@ -46,13 +129,15 @@ public class Client {
     }
 
     public static async void JoinGame() {
-        if (m_Client == null || m_Socket == null) {
-            Log.Error("No client or socket found when authenticating");
+        if (m_Connection == null || m_Socket == null) {
+            Log.General("Unable to find connection to remote server");
             return;
         }
 
         if (m_MatchID != null)
             Disconnect();
+
+        // TODO: Retrieve active mods from server (server has a list of workshop ID's, client then downloads them and activates them)
 
         /*
          * We currently create 1 match on startup of our Nakama server.
@@ -60,7 +145,7 @@ public class Client {
          * 
          * This function sends an api request to fetch the match id and then joins that match
          */
-        IApiRpc response = await m_Client.RpcAsync(m_Session, "get_match_id");
+        IApiRpc response = await m_Connection.RpcAsync(m_Session, "get_match_id");
         m_MatchID = response.Payload.Trim(new char[] { '"' });
 
         IMatch match = await m_Socket.JoinMatchAsync(m_MatchID);
@@ -75,53 +160,6 @@ public class Client {
                 CreatePlayer(presence);
             }
         }
-    }
-
-    public static void InitializeListeners() {
-        if (m_Socket == null || m_Session == null && m_MatchID != null) {
-            Log.Error("No socket or session found when initializing listeners");
-            return;
-        }
-
-        // This will get run every server tick (currently a tickrate of 28)
-        m_Socket.ReceivedMatchState += newState => {
-            switch (newState.OpCode) {
-                case (ushort)OP_CODES.PLAYER_POS:
-                    string stringJson = Encoding.Default.GetString(newState.State);
-                    UserID? data = JsonConvert.DeserializeObject<UserID>(stringJson);
-
-                    if (data != null) {
-                        for (int i = 0; i < 32; i++) { // 32 is the max number of players?
-                            if (data.ClientData[i] != null) {
-                                IClientData client = data.ClientData[i];
-                                if (currentPresences.ContainsKey(client.user_id)) {
-                                    float x = (float)Math.Round((float)client.x);
-                                    float y = (float)Math.Round((float)client.y);
-                                    float z = (float)Math.Round((float)client.z);
-
-                                    Body.SetTransform(currentPresences[client.user_id].m_Body, new Transform(new Vector3(x, y, z), new Quaternion(0, 0.7071068f, 0.7071068f, 0)));
-                                }
-                            }
-                        }
-                    }
-                    break;
-                default:
-                    return;
-            }
-        };
-
-        m_Socket.ReceivedMatchPresence += player => {
-            if (player.Joins.Any()) {
-                foreach (var presence in player.Joins) {
-                    if (m_Session != null && presence.UserId != m_Session.UserId) {
-                        Log.General("{0} has joined the game", presence.UserId);
-                        CreatePlayer(presence);
-                        Body.SetPosition(currentPresences[presence.UserId].m_Body, new Vector3((float)0, (float)0, (float)0));
-                        Body.SetRotation(currentPresences[presence.UserId].m_Body, new Quaternion(0, 0.7071068f, 0.7071068f, 0));
-                    }
-                }
-            };
-        };
     }
 
     public static void OnUpdate() {
@@ -148,6 +186,8 @@ public class Client {
         Vector2 playerInput = Player.GetPlayerMovementInput();
         Transform playerTransform = Player.GetCameraTransform();
 
+        // TODO: Save last position of player in order to compare to current position.
+
         var newState = new Dictionary<string, dynamic> {
             { "user_id", m_Session.UserId },
             { "currentX", playerTransform.Position.X },
@@ -159,8 +199,8 @@ public class Client {
             { "rotationW", playerTransform.Rotation.W }
         }.ToJson();
 
-        // Every local game tick, send m_Client's position data to Nakama
-        m_Socket.SendMatchStateAsync(m_MatchID, 1, newState);
+        // Every local game tick, send m_Connection's position data to Nakama
+        m_Socket.SendMatchStateAsync(m_MatchID, (int)OP_CODES.PLAYER_POS, newState);
     }
 
     public static async void Disconnect() {

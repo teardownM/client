@@ -3,7 +3,7 @@ using SledgeLib;
 using Nakama;
 using Steamworks;
 
-// Error: No m_Client or m_Socket found when authenticating
+// Error: No m_Connection or m_Socket found when authenticating
 // Logger error while formatting: Input string was not in a correct format
 
 class IPlayer : IUserPresence {
@@ -18,44 +18,25 @@ class IPlayer : IUserPresence {
 }
 
 public class TeardownNakama {
-    private static string m_DeviceID { get; set; } = "";
     private static bool m_UseSteam = false;
 
     private static dBindCallback fJoinGameCallback = new dBindCallback(Client.JoinGame);
     private static dBindCallback fDisconnectCallback = new dBindCallback(Client.Disconnect);
 
+    private static dCallback fPostPlayerUpdate = new dCallback(OnUpdate);
+    private static CCallback? cb_PostPlayerUpdate;
+
     private static CBind? ConnectGameBind;
     private static CBind? JoinGameBind;
     private static CBind? DisconnectGameBind;
 
-    private static dCallback fPostPlayerUpdate = new dCallback(Client.OnUpdate);
-    private static CCallback? cb_PostPlayerUpdate;
-
-    private static async void Authenticate() {
-        if (Client.m_Client == null) {
-            Log.Error("No client found when authenticating");
-            return;
-        }
-
-        Client.m_Session = await Client.m_Client.AuthenticateDeviceAsync(m_DeviceID, m_DeviceID);
-
-        Log.General("Authentication Successful");
-
-        Client.m_Socket = Socket.From(Client.m_Client);
-        await Client.m_Socket.ConnectAsync(Client.m_Session);
-
-        Log.General("TeardownNakama Running");
-        Client.InitializeListeners();
-    }
-
     private static void InitializeBindsAndCallbacks() {
-        cb_PostPlayerUpdate = new CCallback(ECallbackType.PostPlayerUpdate, fPostPlayerUpdate);
+        cb_PostPlayerUpdate = new CCallback(ECallbackType.PostPlayerUpdate, fPostPlayerUpdate); // TODO: Change Update to Tick
 
         JoinGameBind = new CBind(EKeyCode.VK_N, fJoinGameCallback);
         DisconnectGameBind = new CBind(EKeyCode.VK_B, fDisconnectCallback);
-        ConnectGameBind = new CBind(EKeyCode.VK_K, () => { // Mainly for debugging purposes to test disconnecting and reconnecting to the server
-            Client.m_Client = new Nakama.Client("http", "127.0.0.1", 7350, "defaultkey");
-            Authenticate();
+        ConnectGameBind = new CBind(EKeyCode.VK_K, () => {
+            Client.Connect("127.0.0.1", 7350);
         });
     }
 
@@ -68,13 +49,10 @@ public class TeardownNakama {
         }
 
         if (m_UseSteam) {
-            m_DeviceID = SteamUser.GetSteamID().ToString();
+            Client.m_DeviceID = SteamUser.GetSteamID().ToString();
         } else {
-            m_DeviceID = Guid.NewGuid().ToString();
+            Client.m_DeviceID = Guid.NewGuid().ToString();
         }
-
-        Client.m_Client = new Nakama.Client("http", "127.0.0.1", 7350, "defaultkey");
-        Authenticate();
 
         InitializeBindsAndCallbacks();
     }
@@ -90,15 +68,16 @@ public class TeardownNakama {
         }
 
         if (m_UseSteam) {
-            m_DeviceID = SteamUser.GetSteamID().ToString();
+            Client.m_DeviceID = SteamUser.GetSteamID().ToString();
         } else {
-            m_DeviceID = Guid.NewGuid().ToString();
+            Client.m_DeviceID = Guid.NewGuid().ToString();
         }
 
-        Client.m_Client = new Nakama.Client("http", "127.0.0.1", 7350, "defaultkey");
-        Authenticate();
-
         InitializeBindsAndCallbacks();
+    }
+
+    public static void OnUpdate() {
+        Client.OnUpdate();
     }
 
     public static void OnShutdown() {
