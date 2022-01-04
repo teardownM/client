@@ -40,23 +40,24 @@ public class Client {
         string stringJson = Encoding.Default.GetString(newState.State);
         UserID? data = JsonConvert.DeserializeObject<UserID>(stringJson);
 
-        if (data != null) {
-            for (int i = 0; i < 32; i++) { // 32 is the max number of players?
-                if (data.ClientData[i] != null) {
-                    IClientData client = data.ClientData[i];
-                    if (currentPresences.ContainsKey(client.user_id)) {
-                        if (m_Session != null && client.user_id != m_Session.UserId) {
-                            // float x = (float)Math.Round((float)client.x);
-                            // float y = (float)Math.Round((float)client.y);
-                            // float z = (float)Math.Round((float)client.z);
+        if (data == null)
+            return;
 
-                            float x = 0;
-                            float y = 0;
-                            float z = 0;
+        for (int i = 0; i < 32; i++) { // 32 is the max number of players?
+            if (data.ClientData[i] != null) {
+                IClientData client = data.ClientData[i];
+                if (currentPresences.ContainsKey(client.user_id)) {
+                    if (m_Session != null && client.user_id != m_Session.UserId) {
+                        // float x = (float)Math.Round((float)client.x);
+                        // float y = (float)Math.Round((float)client.y);
+                        // float z = (float)Math.Round((float)client.z);
 
-                            Body.SetPosition(currentPresences[client.user_id].m_Body, new Vector3(x, y, z));
-                            Body.SetRotation(currentPresences[client.user_id].m_Body, new Quaternion(0, 0.7071068f, 0.7071068f, 0));
-                        }
+                        float x = 0;
+                        float y = 0;
+                        float z = 0;
+
+                        Body.SetPosition(currentPresences[client.user_id].Body, new Vector3(x, y, z));
+                        Body.SetRotation(currentPresences[client.user_id].Body, new Quaternion(0, 0.7071068f, 0.7071068f, 0));
                     }
                 }
             }
@@ -66,22 +67,21 @@ public class Client {
     }
 
     public static void OnPlayerUpdate() {
-        if (Game.GetState() == EGameState.Playing) { // TODO: Don't need this so remove.
-            m_bCanUpdatePlayer = true;
-            // Quaternion camRot = Player.GetCameraTransform().Rotation;
-            // Quaternion rot = new Quaternion(0, 0.7071068f, 0.7071068f, 0);
+        m_bCanUpdatePlayer = true;
+        // Quaternion camRot = Player.GetCameraTransform().Rotation;
+        // Quaternion rot = new Quaternion(0, 0.7071068f, 0.7071068f, 0);
 
-            // camRot = Quaternion.Multiply(camRot, rot);
-        
-            // Body.SetPosition(tempBody, new Vector3((float)0, (float)0, (float)0));
-            // Body.SetRotation(tempBody, camRot);
-        }
+        // camRot = Quaternion.Multiply(camRot, rot);
+    
+        // Body.SetPosition(tempBody, new Vector3((float)0, (float)0, (float)0));
+        // Body.SetRotation(tempBody, camRot);
     }
 
     private static void Listener_PlayerJoin(IMatchPresenceEvent player) {
         if (player.Joins.Any()) {
             foreach (var presence in player.Joins) {
                 if (m_Session != null && presence.UserId != m_Session.UserId) {
+                    Log.General("{0} has joined the game", presence.UserId);
                     CreatePlayer(presence);
                     SpawnModel(presence);
                 }
@@ -96,7 +96,7 @@ public class Client {
 
             foreach (var presence in currentPresences) {
                 if (m_Session != null && presence.Key != m_Session.UserId) {
-                    Body.Destroy(presence.Value.m_Body);
+                    Body.Destroy(presence.Value.Body);
                     Log.General("Destroying");
                 }
             }
@@ -114,9 +114,13 @@ public class Client {
             // tempBody = Body.Create();
             // tempShape = Shape.Create(tempBody);
 
+            // Log.General("tempBody: {0}", tempBody);
+            // Log.General("tempShape: {0}", tempShape);
+
+            // tempBody: 3700
+            // tempShape: 3701
+
             // Shape.LoadVox(tempShape, "Assets/Vox/player.vox", "", 1.0f);
-            // Shape.SetCollisionFilter(currentPresences[presence.UserId].m_Shape, 0, 0);
-            // Body.SetDynamic(tempBody, false);
             // Body.SetPosition(tempBody, new Vector3((float)0, (float)0, (float)0));
             // Body.SetRotation(tempBody, new Quaternion(0, 0.7071068f, 0.7071068f, 0));
         } else if (iState == (uint)EGameState.Menu) {
@@ -129,11 +133,14 @@ public class Client {
         if (presence == null)
             return;
 
-        Shape.LoadVox(currentPresences[presence.UserId].m_Shape, "Assets/Vox/player.vox", "", 1.0f);
-        // Shape.SetCollisionFilter(currentPresences[presence.UserId].m_Shape, 0, 0);
-        // Body.SetDynamic(currentPresences[presence.UserId].m_Body, false);
-        Body.SetPosition(currentPresences[presence.UserId].m_Body, new Vector3((float)0, (float)0, (float)0));
-        Body.SetRotation(currentPresences[presence.UserId].m_Body, new Quaternion(0, 0.7071068f, 0.7071068f, 0));
+        Log.General("Spawn Shape: {0}", currentPresences[presence.UserId].Shape);
+        Log.General("Spawn Body: {0}", currentPresences[presence.UserId].Body);
+
+        Shape.LoadVox(currentPresences[presence.UserId].Shape, "Assets/Vox/player.vox", "", 1.0f);
+        // Shape.SetCollisionFilter(currentPresences[presence.UserId].Shape, 0, 0);
+        // Body.SetDynamic(currentPresences[presence.UserId].Body, false);
+        Body.SetPosition(currentPresences[presence.UserId].Body, new Vector3((float)0, (float)0, (float)0));
+        Body.SetRotation(currentPresences[presence.UserId].Body, new Quaternion(0, 0.7071068f, 0.7071068f, 0));
 
         Log.General("Spawned Model");
     }
@@ -188,12 +195,18 @@ public class Client {
 
     // General Functions
     public static void CreatePlayer(IUserPresence presence) {
-        uint m_Body = Body.Create();
-        // Log.General("Body ID: {0}", m_Body);
+        uint body = Body.Create();
+        uint shape = Shape.Create(body);
+
+        // tempBody = Body.Create();
+        // tempShape = Shape.Create(tempBody);
+
+        // Log.General("tempBody: {0}", tempBody);
+        // Log.General("tempShape: {0}", tempShape);
 
         IPlayer newPlayer = new() {
-            m_Body = m_Body,
-            m_Shape = Shape.Create(m_Body),
+            Body = body,
+            Shape = shape,
             Persistence = presence.Persistence,
             SessionId = presence.SessionId,
             Status = presence.Status,
@@ -201,8 +214,10 @@ public class Client {
             UserId = presence.UserId
         };
 
+        Log.General("NewPly Shape: {0}", newPlayer.Shape);
+        Log.General("NewPly Body: {0}", newPlayer.Body);
+
         currentPresences.Add(presence.UserId, newPlayer);
-        Log.General("{0} has joined the game", presence.UserId);
     }
 
     public static async void JoinGame() {
@@ -222,8 +237,9 @@ public class Client {
          * 
          * This function sends an api request to fetch the match id and then joins that match
          */
+
         IApiRpc response = await m_Connection.RpcAsync(m_Session, "get_match_id");
-        m_MatchID = response.Payload.Trim(new char[] { '"' });
+        m_MatchID = response.Payload.Trim(new char[] { '"' }); // maybe here?
 
         IMatch match = await m_Socket.JoinMatchAsync(m_MatchID);
 
@@ -243,6 +259,18 @@ public class Client {
     public static void OnUpdate() {
         if (m_Socket == null || m_Session == null || m_MatchID == null)
             return;
+
+        // Works but don't want it here
+        // foreach (var presence in currentPresences) {
+        //     // If it's not the local player, load in their vox player model
+        //     if (m_Session != null && presence.Key != m_Session.UserId && !presence.Value.voxelLoaded) {
+        //         Shape.LoadVox(presence.Value.Shape, "Assets/Vox/player.vox", "", 1.0f);
+
+        //         presence.Value.voxelLoaded = true;
+
+        //         Log.General("{0}: Voxel Loaded", presence.Key);
+        //     }
+        // }
 
         Vector2 playerInput = Player.GetPlayerMovementInput();
         Transform playerTransform = Player.GetCameraTransform();
@@ -281,10 +309,10 @@ public class Client {
 
             if (Client.m_Socket != null && Client.m_Session != null && m_MatchID != null) {
                 await m_Socket.LeaveMatchAsync(m_MatchID);
+                currentPresences = new();
                 m_MatchID = null;
                 m_Session = null;
                 m_Socket = null;
-                currentPresences = new();
 
                 Log.General("Disconnected");
 
