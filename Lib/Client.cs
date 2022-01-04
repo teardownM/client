@@ -4,6 +4,7 @@ using Nakama;
 using Nakama.TinyJson;
 
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 using System.Text;
 using System.Numerics;
@@ -87,14 +88,25 @@ public class Client {
             switch (newState.OpCode) {
                 case (ushort)OP_CODES.PLAYER_POS:
                     string stringJson = Encoding.Default.GetString(newState.State);
-                    var incomingData = JsonConvert.DeserializeObject<Dictionary<string, dynamic>>(stringJson);
+                    // var incomingData = JsonConvert.DeserializeObject<Dictionary<string, dynamic>>(stringJson);
+                    UserID data = JsonConvert.DeserializeObject<UserID>(stringJson);
+                    // string id = stringJson.Split(":")[0].Trim(new char[] { '"' })[2..];
 
-                    if (incomingData != null) {
-                        foreach (var presence in incomingData) {
-                            if (currentPresences.ContainsKey(presence.Key)) {
-                                Body.SetTransform(currentPresences[presence.Key].m_Body, new Transform(new Vector3((float)presence.Value.x, (float)presence.Value.y, (float)presence.Value.z), new Quaternion(0, 0, 0, 1)));
+                    if (data != null) {
+                        for (int i = 0; i < 32; i++) { // 32 is the max number of players?
+                            if (data.ClientData[i] != null) {
+                                IClientData client = data.ClientData[i];
+                                if (currentPresences.ContainsKey(client.user_id)) {
+                                    Body.SetTransform(currentPresences[client.user_id].m_Body, new Transform(new Vector3((float)client.x, (float)client.y, (float)client.z), new Quaternion(0, 0, 0, 1)));
+                                }
                             }
                         }
+                        // foreach (var presence in incomingData) {
+                        //     // Log.General("{0}: {1}", presence.Key, presence.Value);
+                        //     if (currentPresences.ContainsKey(presence.Key)) {
+                        //         Body.SetTransform(currentPresences[presence.Key].m_Body, new Transform(new Vector3((float)presence.Value.x, (float)presence.Value.y, (float)presence.Value.z), new Quaternion(0, 0, 0, 1)));
+                        //     }
+                        // }
                     }
                     break;
                 default:
