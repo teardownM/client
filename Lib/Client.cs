@@ -95,7 +95,11 @@ public class Client {
                             if (data.ClientData[i] != null) {
                                 IClientData client = data.ClientData[i];
                                 if (currentPresences.ContainsKey(client.user_id)) {
-                                    Body.SetTransform(currentPresences[client.user_id].m_Body, new Transform(new Vector3((float)client.x, (float)client.y, (float)client.z), new Quaternion(0, 0.7071068f, 0.7071068f, 0)));
+                                    float x = (float)Math.Round((float)client.x);
+                                    float y = (float)Math.Round((float)client.y);
+                                    float z = (float)Math.Round((float)client.z);
+
+                                    Body.SetTransform(currentPresences[client.user_id].m_Body, new Transform(new Vector3(x, y, z), new Quaternion(0, 0.7071068f, 0.7071068f, 0)));
                                 }
                             }
                         }
