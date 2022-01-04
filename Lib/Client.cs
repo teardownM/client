@@ -16,6 +16,8 @@ public class Client {
     public static IClient? m_Connection { get; set; }
     public static ISocket? m_Socket { get; set; }
 
+    private static Vector3 m_PrevPosition = Vector3.Zero;
+
     private static Dictionary<string, IPlayer> currentPresences = new();
 
     private enum OP_CODES : ushort {
@@ -55,7 +57,22 @@ public class Client {
                     Body.SetRotation(currentPresences[presence.UserId].m_Body, new Quaternion(0, 0.7071068f, 0.7071068f, 0));
                 }
             }
-        };
+        } else if (player.Leaves.Any()) {
+            foreach (var presence in player.Leaves) {
+                if (m_Session != null && presence.UserId != m_Session.UserId) {
+                    Log.General("{0} has left the game", presence.UserId);
+                }
+            }
+
+            foreach (var presence in currentPresences) {
+                if (m_Session != null && presence.Key != m_Session.UserId && presence.Value.voxelLoaded) {
+                    Body.Destroy(presence.Value.m_Body);
+                    presence.Value.voxelLoaded = false;
+                }
+            }
+
+            // Disconnect();
+        }
     }
 
     private static void InitializeListeners() {
@@ -71,7 +88,6 @@ public class Client {
                     Listener_UpdatePosition(newState);
                     break;
                 default:
-                    Log.Error("Unknown opcode: {0}", newState.OpCode);
                     return;
             }
         };
@@ -176,7 +192,7 @@ public class Client {
                 Body.SetRotation(presence.Value.m_Body, new Quaternion(0, 0.7071068f, 0.7071068f, 0));
                 presence.Value.voxelLoaded = true;
 
-                Log.General("{0}: Voxel Loaded", presence.Key);
+                Log.General("{0}: Player Model Created", presence.Key);
             }
         }
 
@@ -188,31 +204,35 @@ public class Client {
 
         // TODO: Save last position of player in order to compare to current position.
 
-        var newState = new Dictionary<string, dynamic> {
-            { "user_id", m_Session.UserId },
-            { "currentX", playerTransform.Position.X },
-            { "currentY", playerTransform.Position.Y },
-            { "currentZ", playerTransform.Position.Z },
-            { "rotationX", playerTransform.Rotation.X },
-            { "rotationY", playerTransform.Rotation.Y },
-            { "rotationZ", playerTransform.Rotation.Z },
-            { "rotationW", playerTransform.Rotation.W }
-        }.ToJson();
+        float cx = (float)MathF.Round((float)playerTransform.Position.X, 1);
+        float cy = (float)MathF.Round((float)playerTransform.Position.Y, 1);
+        float cz = (float)MathF.Round((float)playerTransform.Position.Z, 1);
 
-        // Every local game tick, send m_Connection's position data to Nakama
-        m_Socket.SendMatchStateAsync(m_MatchID, (int)OP_CODES.PLAYER_POS, newState);
+        float ox = (float)MathF.Round((float)m_PrevPosition.X, 1);
+        float oy = (float)MathF.Round((float)m_PrevPosition.Y, 1);
+        float oz = (float)MathF.Round((float)m_PrevPosition.Z, 1);
+
+        if (cx != ox || cy != oy || cz != oz) {
+            m_PrevPosition = playerTransform.Position;
+
+            string? newState = new Dictionary<string, dynamic> {
+                { "user_id", m_Session.UserId },
+                { "currentX", playerTransform.Position.X },
+                { "currentY", playerTransform.Position.Y },
+                { "currentZ", playerTransform.Position.Z },
+                { "rotationX", playerTransform.Rotation.X },
+                { "rotationY", playerTransform.Rotation.Y },
+                { "rotationZ", playerTransform.Rotation.Z },
+                { "rotationW", playerTransform.Rotation.W }
+            }.ToJson();
+
+            // Every local game tick, send m_Connection's position data to Nakama
+            m_Socket.SendMatchStateAsync(m_MatchID, (int)OP_CODES.PLAYER_POS, newState);
+        }
     }
 
     public static async void Disconnect() {
-        if (Client.m_Socket != null && Client.m_Socket.IsConnected && m_MatchID != null) {
-            foreach (var presence in currentPresences) {
-                // If it's not the local player, load in their vox player model
-                if (m_Session != null && presence.Key != m_Session.UserId && presence.Value.voxelLoaded) {
-                    Body.Destroy(presence.Value.m_Body);
-                    presence.Value.voxelLoaded = false;
-                }
-            }
-
+        if (Client.m_Socket != null && Client.m_Session != null && m_MatchID != null) {
             await m_Socket.LeaveMatchAsync(m_MatchID);
             m_MatchID = null;
             m_Session = null;
