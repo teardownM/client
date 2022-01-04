@@ -3,9 +3,6 @@ using SledgeLib;
 using Nakama;
 using Steamworks;
 
-// Error: No m_Connection or m_Socket found when authenticating
-// Logger error while formatting: Input string was not in a correct format
-
 class IPlayer : IUserPresence {
     public uint m_Body { get; set; }
     public uint m_Shape { get; set; }
