@@ -38,10 +38,8 @@ public class TeardownNakama {
         }
 
         Client.m_Session = await Client.m_Client.AuthenticateDeviceAsync(m_DeviceID, m_DeviceID);
-        if (!Client.m_Session.Created) {
-            Log.Error("Authentication Failed");
-            return;
-        }
+
+        Log.General("Authentication Successful");
 
         Client.m_Socket = Socket.From(Client.m_Client);
         await Client.m_Socket.ConnectAsync(Client.m_Session);
@@ -59,9 +57,6 @@ public class TeardownNakama {
             Client.m_Client = new Nakama.Client("http", "127.0.0.1", 7350, "defaultkey");
             Authenticate();
         });
-
-        Client.m_Client = new Nakama.Client("http", "127.0.0.1", 7350, "defaultkey");
-        Authenticate();
     }
 
     public static void OnInitialize() {
@@ -77,6 +72,9 @@ public class TeardownNakama {
         } else {
             m_DeviceID = Guid.NewGuid().ToString();
         }
+
+        Client.m_Client = new Nakama.Client("http", "127.0.0.1", 7350, "defaultkey");
+        Authenticate();
 
         InitializeBindsAndCallbacks();
     }
