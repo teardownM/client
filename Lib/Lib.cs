@@ -23,15 +23,19 @@ public class TeardownNakama {
     private static dBindCallback fJoinGameCallback = new dBindCallback(Client.JoinGame);
     private static dBindCallback fDisconnectCallback = new dBindCallback(Client.Disconnect);
 
-    private static dCallback fPostPlayerUpdate = new dCallback(OnUpdate);
-    private static CCallback? cb_PostPlayerUpdate;
+    private static dCallback fPostUpdate = new dCallback(OnUpdate);
+    private static CCallback? cb_PostUpdate;
+
+    private static dCallback fPlayerSpawn = new dCallback(Client.OnLevelLoad);
+    private static CCallback? cb_PlayerSpawn;
 
     private static CBind? ConnectGameBind;
     private static CBind? JoinGameBind;
     private static CBind? DisconnectGameBind;
 
     private static void InitializeBindsAndCallbacks() {
-        cb_PostPlayerUpdate = new CCallback(ECallbackType.PostPlayerUpdate, fPostPlayerUpdate); // TODO: Change Update to Tick
+        cb_PostUpdate = new CCallback(ECallbackType.PostUpdate, fPostUpdate); // TODO: Change Update to Tick
+        cb_PlayerSpawn = new CCallback(ECallbackType.PlayerSpawn, fPlayerSpawn);
 
         JoinGameBind = new CBind(EKeyCode.VK_N, fJoinGameCallback);
         DisconnectGameBind = new CBind(EKeyCode.VK_B, fDisconnectCallback);
@@ -81,7 +85,8 @@ public class TeardownNakama {
     }
 
     public static void OnShutdown() {
-        if (cb_PostPlayerUpdate != null) { cb_PostPlayerUpdate.Unregister(); cb_PostPlayerUpdate = null; }
+        if (cb_PostUpdate != null) { cb_PostUpdate.Unregister(); cb_PostUpdate = null; }
+        if (cb_PlayerSpawn != null) { cb_PlayerSpawn.Unregister(); cb_PlayerSpawn = null; }
         if (JoinGameBind != null) { JoinGameBind.Unregister(); }
         if (DisconnectGameBind != null) { DisconnectGameBind.Unregister(); }
         if (ConnectGameBind != null) { ConnectGameBind.Unregister(); }
