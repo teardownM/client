@@ -164,6 +164,17 @@ public class Client {
 
     public static async void Disconnect() {
         if (Client.m_Socket != null && Client.m_Socket.IsConnected && matchId != null) {
+            foreach (var presence in currentPresences) {
+                // If it's not the local player, load in their vox player model
+                if (m_Session != null && presence.Key != m_Session.UserId && presence.Value.voxelLoaded) {
+                    Body.Destroy(presence.Value.m_Body);
+                    Shape.Destroy(presence.Value.m_Shape);
+                    presence.Value.voxelLoaded = false;
+
+                    Log.General("{0}: Voxel Removed", presence.Key);
+                }
+            }
+
             await m_Socket.LeaveMatchAsync(matchId);
             matchId = null;
             Log.General("Disconnected");
