@@ -16,6 +16,9 @@ public class Client {
     public static IClient? m_Connection { get; set; }
     public static ISocket? m_Socket { get; set; }
 
+    private static uint tempShape = 0;
+    private static uint tempBody = 0;
+
     public static bool m_bConnecting { get; set; } = false;
 
     private static Vector3 m_PrevPosition = Vector3.Zero;
@@ -42,8 +45,7 @@ public class Client {
                         float y = (float)Math.Round((float)client.y);
                         float z = (float)Math.Round((float)client.z);
 
-                        Body.SetTransform(currentPresences[client.user_id].m_Body, new Transform(new Vector3(x, y, z), new Quaternion(0, 0.7071068f, 0.7071068f, 0)));
-                        Log.General("Moving to {0}, {1}, {2}", x, y, z);
+                        // Body.SetTransform(currentPresences[client.user_id].m_Body, new Transform(new Vector3(x, y, z), new Quaternion(0, 0.7071068f, 0.7071068f, 0)));
                     }
                 }
             }
@@ -68,7 +70,7 @@ public class Client {
 
             foreach (var presence in currentPresences) {
                 if (m_Session != null && presence.Key != m_Session.UserId) {
-                    Body.Destroy(presence.Value.m_Body);
+                    // Body.Destroy(presence.Value.m_Body);
                     Log.General("Destroying");
                 }
             }
@@ -82,6 +84,15 @@ public class Client {
 
             JoinGame();
             m_bConnecting = false;
+
+            tempBody = Body.Create();
+            tempShape = Shape.Create(tempBody);
+
+            Shape.LoadVox(tempShape, "Assets/Vox/player.vox", "", 1.0f);
+            // Shape.SetCollisionFilter(currentPresences[presence.UserId].m_Shape, 0, 0);
+            // Body.SetDynamic(tempBody, false);
+            Body.SetPosition(tempBody, new Vector3((float)0, (float)0, (float)0));
+            Body.SetRotation(tempBody, new Quaternion(0, 0.7071068f, 0.7071068f, 0));
         } else if (iState == (uint)EGameState.Menu) {
             if (m_MatchID != null)
                 Disconnect();
@@ -89,16 +100,16 @@ public class Client {
     }
 
     private static void SpawnModel(IUserPresence? presence) {
-        if (presence == null)
-            return;
+        // if (presence == null)
+        //     return;
 
         Shape.LoadVox(currentPresences[presence.UserId].m_Shape, "Assets/Vox/player.vox", "", 10.0f);
-        Shape.SetCollisionFilter(currentPresences[presence.UserId].m_Shape, 0, 0);
+        // Shape.SetCollisionFilter(currentPresences[presence.UserId].m_Shape, 0, 0);
         Body.SetDynamic(currentPresences[presence.UserId].m_Body, false);
         Body.SetPosition(currentPresences[presence.UserId].m_Body, new Vector3((float)0, (float)0, (float)0));
         Body.SetRotation(currentPresences[presence.UserId].m_Body, new Quaternion(0, 0.7071068f, 0.7071068f, 0));
 
-        Log.General("{0}: Spawned Model. BodyID: {1}", presence.UserId, currentPresences[presence.UserId].m_Body);
+        Log.General("Spawned Model");
     }
 
     private static void InitializeListeners() {
@@ -152,7 +163,7 @@ public class Client {
     // General Functions
     public static void CreatePlayer(IUserPresence presence) {
         uint m_Body = Body.Create();
-        Log.General("Body ID: {0}", m_Body);
+        // Log.General("Body ID: {0}", m_Body);
 
         IPlayer newPlayer = new() {
             m_Body = m_Body,
@@ -203,6 +214,18 @@ public class Client {
         }
     }
 
+    public static void OnPlayerUpdate() {
+        if (Game.GetState() == EGameState.Playing) {
+            Quaternion camRot = Player.GetCameraTransform().Rotation;
+            Quaternion rot = new Quaternion(0, 0.7071068f, 0.7071068f, 0);
+
+            camRot = Quaternion.Multiply(camRot, rot);
+        
+            Body.SetPosition(tempBody, new Vector3((float)0, (float)0, (float)0));
+            Body.SetRotation(tempBody, camRot);
+        }
+    }
+
     public static void OnUpdate() {
         if (m_Socket == null || m_Session == null || m_MatchID == null)
             return;
@@ -239,21 +262,25 @@ public class Client {
     }
 
     public static async void Disconnect() {
-        m_bConnecting = false;
+        try { // Temporary
+            m_bConnecting = false;
 
-        if (Client.m_Socket != null && Client.m_Session != null && m_MatchID != null) {
-            await m_Socket.LeaveMatchAsync(m_MatchID);
-            m_MatchID = null;
-            m_Session = null;
-            m_Socket = null;
-            currentPresences = new();
+            if (Client.m_Socket != null && Client.m_Session != null && m_MatchID != null) {
+                await m_Socket.LeaveMatchAsync(m_MatchID);
+                m_MatchID = null;
+                m_Session = null;
+                m_Socket = null;
+                currentPresences = new();
 
-            Log.General("Disconnected");
+                Log.General("Disconnected");
 
-            if (Game.GetState() != EGameState.Menu)
-                Game.SetState(EGameState.Menu);
-        } else {
-            Log.General("You are not connected to a lobby");
+                if (Game.GetState() != EGameState.Menu)
+                    Game.SetState(EGameState.Menu);
+            } else {
+                Log.General("You are not connected to a lobby");
+            }
+        } catch (Exception e) {
+            Log.Error("Error disconnecting from lobby: {0}", e.Message);
         }
     }
 }
