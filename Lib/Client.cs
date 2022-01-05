@@ -79,17 +79,17 @@ public class Client {
                 }
             }
         } else if (player.Leaves.Any()) {
-            foreach (var presence in player.Leaves) {
-                if (m_Session != null && presence.UserId != m_Session.UserId) {
-                    currentPresences.Remove(presence.UserId);
-                    Log.General("{0} has left the game", presence.UserId);
-                }
-            }
-
             foreach (var presence in currentPresences) {
                 if (m_Session != null && presence.Key != m_Session.UserId) {
                     Body.Destroy(presence.Value.Body);
                     Log.General("Destroying");
+                }
+            }
+
+            foreach (var presence in player.Leaves) {
+                if (m_Session != null && presence.UserId != m_Session.UserId) {
+                    currentPresences.Remove(presence.UserId);
+                    Log.General("{0} has left the game", presence.UserId);
                 }
             }
         }
