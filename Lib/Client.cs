@@ -15,9 +15,6 @@ public class Client {
     public static IClient? m_Connection { get; set; }
     public static ISocket? m_Socket { get; set; }
 
-    private static uint tempShape = 0;
-    private static uint tempBody = 0;
-
     private static bool m_bCanUpdatePlayer = false;
 
     public static bool m_bConnecting { get; set; } = false;
@@ -79,7 +76,6 @@ public class Client {
                 if (m_Session != null && presence.UserId != m_Session.UserId) {
                     Log.General("{0} has joined the game", presence.UserId);
                     CreatePlayer(presence);
-                    SpawnModel(presence);
                 }
             }
         } else if (player.Leaves.Any()) {
@@ -106,26 +102,13 @@ public class Client {
 
             JoinGame();
             m_bConnecting = false;
-
-            // tempBody = Body.Create();
-            // tempShape = Shape.Create(tempBody);
-
-            // Log.General("tempBody: {0}", tempBody);
-            // Log.General("tempShape: {0}", tempShape);
-
-            // tempBody: 3700
-            // tempShape: 3701
-
-            // Shape.LoadVox(tempShape, "Assets/Vox/player.vox", "", 1.0f);
-            // Body.SetPosition(tempBody, new Vector3((float)0, (float)0, (float)0));
-            // Body.SetRotation(tempBody, new Quaternion(0, 0.7071068f, 0.7071068f, 0));
         } else if (iState == (uint)EGameState.Menu) {
             if (m_MatchID != null)
                 Disconnect();
         }
     }
 
-    private static void SpawnModel(IUserPresence? presence) {
+    private static void SpawnModel(IPlayer? presence) {
         if (presence == null)
             return;
 
@@ -133,8 +116,6 @@ public class Client {
         Log.General("Spawn Body: {0}", currentPresences[presence.UserId].Body);
 
         Shape.LoadVox(currentPresences[presence.UserId].Shape, "Assets/Vox/player.vox", "", 1.0f);
-        // Shape.SetCollisionFilter(currentPresences[presence.UserId].Shape, 0, 0);
-        // Body.SetDynamic(currentPresences[presence.UserId].Body, false);
         Body.SetPosition(currentPresences[presence.UserId].Body, new Vector3((float)0, (float)0, (float)0));
         Body.SetRotation(currentPresences[presence.UserId].Body, new Quaternion(0, 0.7071068f, 0.7071068f, 0));
 
@@ -247,7 +228,7 @@ public class Client {
             if (m_Session != null && presence.UserId != m_Session.UserId) {
                 Log.General("User Already In-Game: {0}", presence.UserId);
                 CreatePlayer(presence);
-                SpawnModel(presence);
+                SpawnModel(currentPresences[presence.UserId]);
             }
         }
     }
