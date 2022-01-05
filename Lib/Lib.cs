@@ -4,8 +4,8 @@ using Nakama;
 using Steamworks;
 
 class IPlayer : IUserPresence {
-    public uint m_Body { get; set; }
-    public uint m_Shape { get; set; }
+    public uint Body { get; set; }
+    public uint Shape { get; set; }
     public bool voxelLoaded { get; set; }
     public bool Persistence { get; set; }
     public string? SessionId { get; set; }
@@ -17,7 +17,6 @@ class IPlayer : IUserPresence {
 public class TeardownNakama {
     private static bool m_UseSteam = false;
 
-    private static dBindCallback fJoinGameCallback = new dBindCallback(Client.JoinGame);
     private static dBindCallback fDisconnectCallback = new dBindCallback(Client.Disconnect);
     private static dCallback f_PostPlayerUpdateFunc = new dCallback(Client.OnPlayerUpdate);
 
@@ -33,7 +32,6 @@ public class TeardownNakama {
     private static CCallback? cb_StateChange;
 
     private static CBind? ConnectGameBind;
-    private static CBind? JoinGameBind;
     private static CBind? DisconnectGameBind;
 
     private static void InitializeBindsAndCallbacks() {
@@ -41,7 +39,6 @@ public class TeardownNakama {
         cb_PlayerUpdate = new CCallback(ECallbackType.PostPlayerUpdate, f_PostPlayerUpdateFunc);
         cb_StateChange = new CCallback(ECallbackType.StateChange, fStateChange);
 
-        JoinGameBind = new CBind(EKeyCode.VK_N, fJoinGameCallback);
         DisconnectGameBind = new CBind(EKeyCode.VK_B, fDisconnectCallback);
         ConnectGameBind = new CBind(EKeyCode.VK_K, () => {
             Client.Connect("127.0.0.1", 7350);
@@ -66,6 +63,8 @@ public class TeardownNakama {
     }
 
     public static void OnReload() {
+        Log.General("=----- Reloading -----=");
+
         if (Client.m_Socket != null) {
             if (Client.m_Socket.IsConnected) {
                 Client.Disconnect();
@@ -92,7 +91,6 @@ public class TeardownNakama {
         if (cb_PostUpdate != null) { cb_PostUpdate.Unregister(); cb_PostUpdate = null; }
         if (cb_PlayerUpdate != null) { cb_PlayerUpdate.Unregister(); cb_PlayerUpdate = null; }
         if (cb_StateChange != null) { cb_StateChange.Unregister(); cb_StateChange = null; }
-        if (JoinGameBind != null) { JoinGameBind.Unregister(); }
         if (DisconnectGameBind != null) { DisconnectGameBind.Unregister(); }
         if (ConnectGameBind != null) { ConnectGameBind.Unregister(); }
 
