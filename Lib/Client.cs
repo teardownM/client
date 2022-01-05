@@ -170,12 +170,6 @@ public class Client {
         uint body = Body.Create();
         uint shape = Shape.Create(body);
 
-        // tempBody = Body.Create();
-        // tempShape = Shape.Create(tempBody);
-
-        // Log.General("tempBody: {0}", tempBody);
-        // Log.General("tempShape: {0}", tempShape);
-
         IPlayer newPlayer = new() {
             Body = body,
             Shape = shape,
@@ -246,8 +240,6 @@ public class Client {
         Vector2 playerInput = Player.GetPlayerMovementInput();
         Transform playerTransform = Player.GetCameraTransform();
 
-        // TODO: Save last position of player in order to compare to current position.
-
         float cx = (float)MathF.Round((float)playerTransform.Position.X, 1);
         float cy = (float)MathF.Round((float)playerTransform.Position.Y, 1);
         float cz = (float)MathF.Round((float)playerTransform.Position.Z, 1);
@@ -275,25 +267,21 @@ public class Client {
     }
 
     public static async void Disconnect() {
-        try { // Temporary
-            m_bConnecting = false;
+        m_bConnecting = false;
 
-            if (Client.m_Socket != null && Client.m_Session != null && m_MatchID != null) {
-                await m_Socket.LeaveMatchAsync(m_MatchID);
-                currentPresences = new();
-                m_MatchID = null;
-                m_Session = null;
-                m_Socket = null;
+        if (Client.m_Socket != null && Client.m_Session != null && m_MatchID != null) {
+            await m_Socket.LeaveMatchAsync(m_MatchID);
+            currentPresences = new();
+            m_MatchID = null;
+            m_Session = null;
+            m_Socket = null;
 
-                Log.General("Disconnected");
+            Log.General("Disconnected");
 
-                if (Game.GetState() != EGameState.Menu)
-                    Game.SetState(EGameState.Menu);
-            } else {
-                Log.General("You are not connected to a lobby");
-            }
-        } catch (Exception e) {
-            Log.Error("Error disconnecting from lobby: {0}", e.Message);
+            if (Game.GetState() != EGameState.Menu)
+                Game.SetState(EGameState.Menu);
+        } else {
+            Log.General("You are not connected to a lobby");
         }
     }
 }
