@@ -112,14 +112,9 @@ public class Client {
         if (presence == null)
             return;
 
-        Log.General("Spawn Shape: {0}", currentPresences[presence.UserId].Shape);
-        Log.General("Spawn Body: {0}", currentPresences[presence.UserId].Body);
-
         Shape.LoadVox(currentPresences[presence.UserId].Shape, "Assets/Vox/player.vox", "", 1.0f);
         Body.SetPosition(currentPresences[presence.UserId].Body, new Vector3((float)0, (float)0, (float)0));
         Body.SetRotation(currentPresences[presence.UserId].Body, new Quaternion(0, 0.7071068f, 0.7071068f, 0));
-
-        Log.General("Spawned Model");
     }
 
     private static void InitializeListeners() {
