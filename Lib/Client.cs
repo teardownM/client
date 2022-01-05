@@ -82,7 +82,6 @@ public class Client {
             foreach (var presence in currentPresences) {
                 if (m_Session != null && presence.Key != m_Session.UserId) {
                     Body.Destroy(presence.Value.Body);
-                    Log.General("Destroying");
                 }
             }
 
@@ -179,9 +178,6 @@ public class Client {
             Username = presence.Username,
             UserId = presence.UserId
         };
-
-        Log.General("NewPly Shape: {0}", newPlayer.Shape);
-        Log.General("NewPly Body: {0}", newPlayer.Body);
 
         currentPresences.Add(presence.UserId, newPlayer);
     }
