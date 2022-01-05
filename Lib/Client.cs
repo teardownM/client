@@ -48,13 +48,9 @@ public class Client {
                 IClientData client = data.ClientData[i];
                 if (currentPresences.ContainsKey(client.user_id)) {
                     if (m_Session != null && client.user_id != m_Session.UserId) {
-                        // float x = (float)Math.Round((float)client.x);
-                        // float y = (float)Math.Round((float)client.y);
-                        // float z = (float)Math.Round((float)client.z);
-
-                        float x = 0;
-                        float y = 0;
-                        float z = 0;
+                        float x = (float)Math.Round((float)client.x);
+                        float y = (float)Math.Round((float)client.y);
+                        float z = (float)Math.Round((float)client.z);
 
                         Body.SetPosition(currentPresences[client.user_id].Body, new Vector3(x, y, z));
                         Body.SetRotation(currentPresences[client.user_id].Body, new Quaternion(0, 0.7071068f, 0.7071068f, 0));
@@ -260,17 +256,16 @@ public class Client {
         if (m_Socket == null || m_Session == null || m_MatchID == null)
             return;
 
-        // Works but don't want it here
-        // foreach (var presence in currentPresences) {
-        //     // If it's not the local player, load in their vox player model
-        //     if (m_Session != null && presence.Key != m_Session.UserId && !presence.Value.voxelLoaded) {
-        //         Shape.LoadVox(presence.Value.Shape, "Assets/Vox/player.vox", "", 1.0f);
+        foreach (var presence in currentPresences) {
+            // If it's not the local player, load in their vox player model
+            if (m_Session != null && presence.Key != m_Session.UserId && !presence.Value.voxelLoaded) {
+                Shape.LoadVox(presence.Value.Shape, "Assets/Vox/player.vox", "", 1.0f);
 
-        //         presence.Value.voxelLoaded = true;
+                presence.Value.voxelLoaded = true;
 
-        //         Log.General("{0}: Voxel Loaded", presence.Key);
-        //     }
-        // }
+                Log.General("{0}: Voxel Loaded", presence.Key);
+            }
+        }
 
         Vector2 playerInput = Player.GetPlayerMovementInput();
         Transform playerTransform = Player.GetCameraTransform();
