@@ -57,7 +57,7 @@ public class IClientData {
 
     public int reason { get; set; }
 
-    public int x { get; set; }
-    public int y { get; set; }
-    public int z { get; set; }
+    public float x { get; set; }
+    public float y { get; set; }
+    public float z { get; set; }
 }

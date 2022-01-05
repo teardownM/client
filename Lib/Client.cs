@@ -15,11 +15,10 @@ public class Client {
     public static IClient? m_Connection { get; set; }
     public static ISocket? m_Socket { get; set; }
 
-    private static bool m_bCanUpdatePlayer = false;
-
     public static bool m_bConnecting { get; set; } = false;
 
     private static Vector3 m_PrevPosition = Vector3.Zero;
+    private static ushort m_PlayerCount = 0;
 
     private static Dictionary<string, IPlayer> currentPresences = new();
 
@@ -31,43 +30,31 @@ public class Client {
 
     // Listeners
     private static void Listener_UpdatePosition(IMatchState newState) {
-        if (!m_bCanUpdatePlayer)
-            return;
-
         string stringJson = Encoding.Default.GetString(newState.State);
         UserID? data = JsonConvert.DeserializeObject<UserID>(stringJson);
 
         if (data == null)
             return;
 
-        for (int i = 0; i < 32; i++) { // 32 is the max number of players?
-            if (data.ClientData[i] != null) {
-                IClientData client = data.ClientData[i];
-                if (currentPresences.ContainsKey(client.user_id)) {
-                    if (m_Session != null && client.user_id != m_Session.UserId) {
-                        float x = (float)Math.Round((float)client.x);
-                        float y = (float)Math.Round((float)client.y);
-                        float z = (float)Math.Round((float)client.z);
+        for (int i = 0; i < m_PlayerCount + 1; i++) {
+            IClientData client = data.ClientData[i];
+            if (client.user_id == m_Session!.UserId)
+                continue;
 
-                        Body.SetPosition(currentPresences[client.user_id].Body, new Vector3(x, y, z));
-                        Body.SetRotation(currentPresences[client.user_id].Body, new Quaternion(0, 0.7071068f, 0.7071068f, 0));
-                    }
-                }
-            }
+            float x = client.x;
+            float y = client.y;
+            float z = client.z;
+
+            Log.General($"{client.user_id} is at {x}, {y}, {z}");
+
+            Body.SetPosition(currentPresences[client.user_id].Body, new Vector3(x, y, z));
+            Body.SetRotation(currentPresences[client.user_id].Body, new Quaternion(0, 0.7071068f, 0.7071068f, 0));
         }
-
-        m_bCanUpdatePlayer = false;
     }
 
     public static void OnPlayerUpdate() {
-        m_bCanUpdatePlayer = true;
-        // Quaternion camRot = Player.GetCameraTransform().Rotation;
-        // Quaternion rot = new Quaternion(0, 0.7071068f, 0.7071068f, 0);
-
-        // camRot = Quaternion.Multiply(camRot, rot);
-    
-        // Body.SetPosition(tempBody, new Vector3((float)0, (float)0, (float)0));
-        // Body.SetRotation(tempBody, camRot);
+        // Updating temp vox here = fine
+        // Updating other player positions anywhere = bad
     }
 
     private static void Listener_PlayerJoin(IMatchPresenceEvent player) {
@@ -79,6 +66,8 @@ public class Client {
                 }
             }
         } else if (player.Leaves.Any()) {
+            m_PlayerCount--;
+
             foreach (var presence in currentPresences) {
                 if (m_Session != null && presence.Key != m_Session.UserId) {
                     Body.Destroy(presence.Value.Body);
@@ -111,9 +100,9 @@ public class Client {
         if (presence == null)
             return;
 
-        Shape.LoadVox(currentPresences[presence.UserId].Shape, "Assets/Vox/player.vox", "", 1.0f);
-        Body.SetPosition(currentPresences[presence.UserId].Body, new Vector3((float)0, (float)0, (float)0));
-        Body.SetRotation(currentPresences[presence.UserId].Body, new Quaternion(0, 0.7071068f, 0.7071068f, 0));
+        Shape.LoadVox(currentPresences[presence.UserId!].Shape, "Assets/Vox/player.vox", "", 1.0f);
+        Body.SetPosition(currentPresences[presence.UserId!].Body, new Vector3((float)0, (float)0, (float)0));
+        Body.SetRotation(currentPresences[presence.UserId!].Body, new Quaternion(0, 0.7071068f, 0.7071068f, 0));
     }
 
     private static void InitializeListeners() {
@@ -180,6 +169,7 @@ public class Client {
         };
 
         currentPresences.Add(presence.UserId, newPlayer);
+        m_PlayerCount++;
     }
 
     public static async void JoinGame() {
@@ -222,6 +212,18 @@ public class Client {
         if (m_Socket == null || m_Session == null || m_MatchID == null)
             return;
 
+        Vector2 playerInput = Player.GetPlayerMovementInput();
+        Transform playerTransform = Player.GetCameraTransform();
+
+        string? newState = new Dictionary<string, dynamic> {
+            { "user_id", m_Session.UserId },
+            { "currentX", playerTransform.Position.X },
+            { "currentY", playerTransform.Position.Y },
+            { "currentZ", playerTransform.Position.Z },
+        }.ToJson();
+
+        m_Socket.SendMatchStateAsync(m_MatchID, (ushort)OP_CODES.PLAYER_POS, newState);
+
         foreach (var presence in currentPresences) {
             // If it's not the local player, load in their vox player model
             if (m_Session != null && presence.Key != m_Session.UserId && !presence.Value.voxelLoaded) {
@@ -233,33 +235,26 @@ public class Client {
             }
         }
 
-        Vector2 playerInput = Player.GetPlayerMovementInput();
-        Transform playerTransform = Player.GetCameraTransform();
+        // float cx = (float)MathF.Round((float)playerTransform.Position.X, 1);
+        // float cy = (float)MathF.Round((float)playerTransform.Position.Y, 1);
+        // float cz = (float)MathF.Round((float)playerTransform.Position.Z, 1);
 
-        float cx = (float)MathF.Round((float)playerTransform.Position.X, 1);
-        float cy = (float)MathF.Round((float)playerTransform.Position.Y, 1);
-        float cz = (float)MathF.Round((float)playerTransform.Position.Z, 1);
+        // float ox = (float)MathF.Round((float)m_PrevPosition.X, 1);
+        // float oy = (float)MathF.Round((float)m_PrevPosition.Y, 1);
+        // float oz = (float)MathF.Round((float)m_PrevPosition.Z, 1);
 
-        float ox = (float)MathF.Round((float)m_PrevPosition.X, 1);
-        float oy = (float)MathF.Round((float)m_PrevPosition.Y, 1);
-        float oz = (float)MathF.Round((float)m_PrevPosition.Z, 1);
+        // if (cx != ox || cy != oy || cz != oz) {
+        //     m_PrevPosition = playerTransform.Position;
 
-        if (cx != ox || cy != oy || cz != oz) {
-            m_PrevPosition = playerTransform.Position;
+        //     string? newState = new Dictionary<string, dynamic> {
+        //         { "user_id", m_Session.UserId },
+        //         { "currentX", playerTransform.Position.X },
+        //         { "currentY", playerTransform.Position.Y },
+        //         { "currentZ", playerTransform.Position.Z },
+        //     }.ToJson();
 
-            string? newState = new Dictionary<string, dynamic> {
-                { "user_id", m_Session.UserId },
-                { "currentX", playerTransform.Position.X },
-                { "currentY", playerTransform.Position.Y },
-                { "currentZ", playerTransform.Position.Z },
-                { "rotationX", playerTransform.Rotation.X },
-                { "rotationY", playerTransform.Rotation.Y },
-                { "rotationZ", playerTransform.Rotation.Z },
-                { "rotationW", playerTransform.Rotation.W }
-            }.ToJson();
-
-            m_Socket.SendMatchStateAsync(m_MatchID, (int)OP_CODES.PLAYER_POS, newState);
-        }
+        //     m_Socket.SendMatchStateAsync(m_MatchID, (int)OP_CODES.PLAYER_POS, newState);
+        // }
     }
 
     public static async void Disconnect() {
@@ -271,6 +266,7 @@ public class Client {
             m_MatchID = null;
             m_Session = null;
             m_Socket = null;
+            m_PlayerCount = 0;
 
             Log.General("Disconnected");
 
