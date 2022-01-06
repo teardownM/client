@@ -190,8 +190,10 @@ public class Client {
          * This function sends an api request to fetch the match id and then joins that match
          */
 
-        IApiRpc response = await m_Connection.RpcAsync(m_Session, "get_match_id");
-        m_MatchID = response.Payload.Trim(new char[] { '"' }); // maybe here?
+        IApiRpc response = await m_Connection.RpcAsync(m_Session, "rpc_get_matches");
+        RPCGetMatches[]? m_Matches = JsonConvert.DeserializeObject<RPCGetMatches[]>(response.Payload);
+
+        m_MatchID = m_Matches?.First().match_id;
 
         IMatch match = await m_Socket.JoinMatchAsync(m_MatchID);
 

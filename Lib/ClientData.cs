@@ -61,3 +61,19 @@ public class IClientData {
     public float y { get; set; }
     public float z { get; set; }
 }
+
+public class RPCLabel
+{
+    public string value { get; set; }
+}
+
+public class RPCGetMatches
+{
+    public string match_id { get; set; } 
+    public string authoritative { get; set; }
+    public RPCLabel label { get; set; }
+    public int tick_rate { get; set; } 
+
+    public string handler_name { get; set; }
+
+}
