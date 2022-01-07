@@ -37,7 +37,7 @@ public static class IClientData {
 }
 
 public static class Client {
-    public class ServerUser {
+    public class ServerLabel {
         public string? value { get; set; }
     }
 
@@ -49,7 +49,7 @@ public static class Client {
         public static bool? Authoritative { get; set; }
 
         [JsonProperty("label")]
-        public static ServerUser? Label { get; set; }
+        public static ServerLabel? Label { get; set; }
 
         [JsonProperty("tick_rate")]
         public static int? TickRate { get; set; }
