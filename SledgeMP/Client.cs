@@ -65,7 +65,7 @@ public static class Client {
     private static IClient? m_Connection = null;
     private static ISocket? m_Socket = null;
 
-    private static bool m_bConnecting = false;
+    private static bool m_Connecting = false;
 
     private enum OPCODE : ushort {
         PlayerTransform = 1,
@@ -97,7 +97,7 @@ public static class Client {
         m_Socket.ReceivedMatchState += OnMatchState;
 
         // Join the server
-        m_bConnecting = true;
+        m_Connecting = true;
 
         IApiRpc response = await m_Connection.RpcAsync(m_Session, "rpc_get_matches");
         JsonConvert.DeserializeObject<Server>(response.Payload.Substring(1, response.Payload.Length - 2));
@@ -140,11 +140,11 @@ public static class Client {
                 break;
             case (uint)EGameState.Playing:
                 Log.General("Entering game");
-                if (!m_bConnecting)
+                if (!m_Connecting)
                     return;
 
                 Log.General("Connected to server");
-                m_bConnecting = false;
+                m_Connecting = false;
                 break;
             default:
                 break;
