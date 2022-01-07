@@ -101,8 +101,6 @@ public static class Client {
         IApiRpc response = await m_Connection.RpcAsync(m_Session, "rpc_get_matches");
         JsonConvert.DeserializeObject<Server>(response.Payload.Substring(1, response.Payload.Length - 2));
 
-        // {"match_id":"b00d8950-2285-41b2-95fc-15cee9830266.nakama1","authoritative":true,"label":{"value":"dev"},"tick_rate":28,"handler_name":"sandbox"}
-
         await m_Socket.JoinMatchAsync(Server.MatchID);
 
         return m_Session;
