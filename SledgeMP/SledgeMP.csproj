@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+       <TargetFramework>net6.0</TargetFramework>
+       <AssemblyName>SledgeMP</AssemblyName>
+       <ImplicitUsings>enable</ImplicitUsings>
+       <Nullable>enable</Nullable>
+       <Platforms>x64</Platforms>
+       <ProduceReferenceAssembly>False</ProduceReferenceAssembly>
+    </PropertyGroup>
+    
+    <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+        <Exec Command="xcopy $(ProjectDir)$(OutDir)SledgeMP.dll ..\..\mods\SledgeMP /y" />
+    </Target>
+    <ItemGroup>
+        <Reference Include="SledgeLib">
+          <HintPath>..\..\mods\sledgelib.dll</HintPath>
+        </Reference>
+        <Reference Include="Nakama">
+          <HintPath>dep/Nakama.dll</HintPath>
+        </Reference>
+        <Reference Include="Steamworks">
+          <HintPath>dep/Steamworks.NET.dll</HintPath>
+        </Reference>
+        <Reference Include="Newtonsoft.JSON">
+          <HintPath>dep/Newtonsoft.Json.dll</HintPath>
+        </Reference>
+      </ItemGroup>
+</Project>
