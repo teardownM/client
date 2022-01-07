@@ -110,11 +110,11 @@ public static class Client {
 
     public static async void Disconnect() {
         if (m_Socket != null) {
-            await m_Socket.CloseAsync();
-
             if (Server.MatchID != null) {
                 await m_Socket.LeaveMatchAsync(Server.MatchID);
             }
+
+            await m_Socket.CloseAsync();
 
             Server.MatchID = null;
             m_Socket = null;
