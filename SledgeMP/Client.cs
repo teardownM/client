@@ -130,13 +130,11 @@ public static class Client {
     public static void OnStateChange(uint iState) {
         switch (iState) {
             case (uint)EGameState.Menu:
-                Log.General("Entering menu");
                 if (Server.MatchID != null)
                     Disconnect();
 
                 break;
             case (uint)EGameState.Playing:
-                Log.General("Entering game");
                 if (!m_Connecting)
                     return;
 
