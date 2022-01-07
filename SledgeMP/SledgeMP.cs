@@ -32,7 +32,7 @@ public class SledgeMP {
     });
 
     private static dCallback cb_PostUpdateFunc = new dCallback(() => {
-
+        Client.OnUpdate();
     });
 
     private static dCallback cb_PrePlayerUpdateFunc = new dCallback(() => {
