@@ -113,9 +113,9 @@ public static class Client {
         if (m_Socket != null) {
             await m_Socket.CloseAsync();
 
-            // if (m_MatchID != null) {
-            //     await m_Socket.LeaveMatchAsync(m_MatchID);
-            // }
+            if (m_MatchID != null) {
+                await m_Socket.LeaveMatchAsync(m_MatchID);
+            }
 
             m_MatchID = null;
             m_Socket = null;
