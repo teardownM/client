@@ -58,7 +58,6 @@ public static class Client {
         public static string? HandlerName { get; set; }
     }
 
-    private static string? m_MatchID = null;
     private static string? m_DeviceID = "";
 
     private static ISession? m_Session = null;
@@ -113,11 +112,11 @@ public static class Client {
         if (m_Socket != null) {
             await m_Socket.CloseAsync();
 
-            if (m_MatchID != null) {
-                await m_Socket.LeaveMatchAsync(m_MatchID);
+            if (Server.MatchID != null) {
+                await m_Socket.LeaveMatchAsync(Server.MatchID);
             }
 
-            m_MatchID = null;
+            Server.MatchID = null;
             m_Socket = null;
             m_Session = null;
 
@@ -134,7 +133,7 @@ public static class Client {
         switch (iState) {
             case (uint)EGameState.Menu:
                 Log.General("Entering menu");
-                if (m_MatchID != null)
+                if (Server.MatchID != null)
                     Disconnect();
 
                 break;
