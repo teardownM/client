@@ -127,6 +127,10 @@ public static class Client {
         }
     }
 
+    public static void OnUpdate() {
+        
+    }
+
     public static void OnStateChange(uint iState) {
         switch (iState) {
             case (uint)EGameState.Menu:
