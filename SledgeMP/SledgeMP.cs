@@ -7,7 +7,8 @@ using Nakama;
 /* Main things go here such as callbacks */
 
 public class SledgeMP {
-    private static string m_IP = "159.89.18.92";
+    // private static string m_IP = "159.89.18.92";
+    private static string m_IP = "127.0.0.1";
     private static ushort m_Port = 7350;
 
     private static CCallback? cb_PrePlayerUpdate;
@@ -48,6 +49,9 @@ public class SledgeMP {
     });
 
     public static void OnInitialize() {
+        if (Game.GetState() == EGameState.Unknown || Game.GetState() == EGameState.Splash)
+            Game.SetState(EGameState.Menu);
+        
         if (SteamAPI.Init()) {
             Log.General("SteamAPI initialized");
             m_bSteamInitialized = true;
