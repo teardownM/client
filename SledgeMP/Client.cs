@@ -28,8 +28,7 @@ public class IClientData {
     public string? Status;
     public string? UserID;
     public string? Node;
-    public bool? Spawn;
-    public bool? CanSpawn;
+    public bool? Spawned;
 
     public ushort? Reason;
 
@@ -59,6 +58,7 @@ public static class Client {
         public static string? HandlerName { get; set; }
     }
 
+    // Dictionary of all current players in the game
     private static Dictionary<string, IClientData> m_Clients = new();
 
     private static string? m_DeviceID = "";
@@ -67,7 +67,6 @@ public static class Client {
     private static IClient? m_Connection = null;
     private static ISocket? m_Socket = null;
 
-    private static bool m_Connecting = false;
     private static bool m_Connected = false;
 
     private static List<string> m_ModelsToLoad = new();
@@ -93,30 +92,32 @@ public static class Client {
             return await Task.FromResult<ISession>(null!);
         }
 
-        try {
+        try
+        {
             m_Session = await m_Connection.AuthenticateDeviceAsync(m_DeviceID, m_DeviceID);
+            Log.Verbose("Successfully authenticated");
+            Log.General("Your ID: {0}", m_Session.UserId);
         } catch (Exception) {
             return await Task.FromResult<ISession>(null!);
         }
 
-        Log.General("Your ID: {0}", m_Session.UserId);
-
         m_Socket = Socket.From(m_Connection);
         await m_Socket.ConnectAsync(m_Session);
+
         m_Socket.ReceivedMatchState += OnMatchState;
         m_Socket.ReceivedMatchPresence += OnMatchPresence;
-
-        // Join the server
-        m_Connecting = true;
 
         IApiRpc response = await m_Connection.RpcAsync(m_Session, "rpc_get_matches");
         JsonConvert.DeserializeObject<Server>(response.Payload.Substring(1, response.Payload.Length - 2));
 
         IMatch match = await m_Socket.JoinMatchAsync(Server.MatchID);
+        m_Connected = true;
+        Log.Verbose("Successfully connected to match {0}", Server.MatchID!);
 
         foreach (IUserPresence client in match.Presences) {
-            if (client.UserId != m_Session.UserId)
-                CreatePlayer(client);
+            Log.General("{0} already in the game", client.UserId);
+            CreatePresence(client);
+            m_ModelsToLoad.Add(client.UserId);
         }
 
         return m_Session;
@@ -133,7 +134,6 @@ public static class Client {
             Server.MatchID = null;
             m_Socket = null;
             m_Session = null;
-            m_Connecting = false;
             m_Connected = false;
 
             m_Clients = new() {};
@@ -148,62 +148,57 @@ public static class Client {
     }
 
     public static void OnUpdate() {
-        if (!m_Connected)
+        if (!m_Connected || Game.GetState() != EGameState.Playing)
             return;
 
-        for (int i = 0; i < m_ModelsToLoad.Count; i++) {
-            if (m_Clients[m_ModelsToLoad[i]].Spawn == false || m_Clients[m_ModelsToLoad[i]].CanSpawn == false)
-                continue;
+        if (!m_ModelsToLoad.Any())
+            return;
 
-            SpawnPlayer(m_ModelsToLoad[i]);
-            m_ModelsToLoad.RemoveAt(i);// ! Possible issue
+        foreach (var userId in m_ModelsToLoad.ToList())
+        {
+            // If it's not the local player, load in their vox player model
+            if (userId != m_Session.UserId)
+            {
+                SpawnPlayer(userId);
+                m_ModelsToLoad.Remove(userId);
+
+                Log.General("Loaded {0}'s model into the game", userId);
+            }
         }
     }
 
-    public static void CreatePlayer(IUserPresence player) {
-        Log.General("Creating player {0}", player.UserId);
+    // Presence means another player / client that is NOT the local player.
+    public static void CreatePresence(IUserPresence player) {
+        Log.General("Creating presence {0}", player.UserId);
+
+        // Create a static body for the player, set their position
+        uint body = Body.Create();
+        Body.SetDynamic(body, false);
+        Body.SetPosition(body, new Vector3(0, 0, 0));
+
+        Model playerModel = new() {
+            Body = body,
+            sBody = Shape.Create(body)
+        };
 
         IClientData newPlayer = new() {
             SessionID = player.SessionId,
             Username = player.UserId,
             Status = player.Status,
             UserID = player.UserId,
-            Spawn = false
+            Spawned = false,
+            Model = playerModel
         };
 
         m_Clients.Add(player.UserId, newPlayer);
-        m_ModelsToLoad.Add(player.UserId);
     }
 
     public static void SpawnPlayer(string clientID) {
-        Log.General("{0} has spawned", m_Clients[clientID].Username!);
+        Shape.LoadVox(m_Clients[clientID].Model.sBody, "Assets/Models/player.vox", "", 1.0f);
+        Body.SetTransform(m_Clients[clientID].Model.Body, new Transform(new Vector3(50, 10, 10), new Quaternion(0, 0, 0, 1)));
+        m_Clients[clientID].Spawned = true;
 
-        uint body = Body.Create();
-
-        m_Clients[clientID].Model = new Model() {
-            Body = body,
-            sBody = Shape.Create(body),
-        };
-
-        m_Clients[clientID].Transform.Position = new Vector3(0, 0, 0);
-
-        Body.SetPosition(m_Clients[clientID].Model.Body, new Vector3(0, 0, 0));
-        Body.SetRotation(m_Clients[clientID].Model.Body, new Quaternion(1, 1, 1, 1));
-
-        m_Clients[clientID].CanSpawn = false;
-
-        bool success = Shape.LoadVox(m_Clients[clientID].Model.sBody, "Assets/Models/Player.vox", "", 1.0f);
-
-        Vector3 pos = Player.GetPosition();
-
-        m_Socket!.SendMatchStateAsync(Server.MatchID, (Int64)OPCODE.PLAYER_SPAWN, new Dictionary<string, dynamic> {
-            { "user_id", m_Session!.UserId },
-            { "currentX", pos.X },
-            { "currentY", pos.Y },
-            { "currentZ", pos.Z }
-        }.ToJson());
-
-        Log.General("Sending player spawn to {0}", clientID);
+        Log.General("{0} has spawned", clientID);
     }
 
     public static void OnStateChange(uint iState) {
@@ -213,23 +208,19 @@ public static class Client {
                     Disconnect();
                 break;
             case (uint)EGameState.Playing:
-                if (!m_Connecting)
-                    return;
+                // 1. Player joins server from the menu
+                // 2. Connects to match instantly
+                // 3. TODO: Force game to load map that server is using
+                // 4. Player loads into the map
+                // 5. EGameState changes to playing
+                // 6. Spawn players in m_ModelsToLoad
+                if (Server.MatchID != null) // <-- Checking for Server.MatchID is the same as checking if m_Connected is true
+                {
+                    Log.Verbose("Local client has loaded into the map.");
 
-                Log.General("Connected to server");
-                m_Connecting = false;
-                m_Connected = true;
-
-                Vector3 pos = Player.GetPosition();
-
-                m_Socket!.SendMatchStateAsync(Server.MatchID, (Int64)OPCODE.PLAYER_SPAWN, new Dictionary<string, dynamic> {
-                    { "user_id", m_Session!.UserId },
-                    { "currentX", pos.X },
-                    { "currentY", pos.Y },
-                    { "currentZ", pos.Z }
-                }.ToJson());
-
-                Log.General("Sending PLAYER_SPAWN from OnStateChange");
+                    // 7. Notify every player local client has loaded in and should spawn their model
+                    m_Socket.SendMatchStateAsync(Server.MatchID, (long)OPCODE.PLAYER_SPAWN, "");
+                }
                 break;
             default:
                 break;
@@ -247,13 +238,17 @@ public static class Client {
                 Log.General("Received player transform");
                 break;
             case (Int64)OPCODE.PLAYER_SPAWN:
-                string id = Encoding.Default.GetString(state.State).Split("\"", 3)[1];
+                // This message could be received in the menu (while connecting and not in game yet)
+                if (!Game.IsPlaying())
+                    break;
+
+                string id = System.Text.Encoding.Default.GetString(state.State);
                 if (id == m_Session!.UserId)
                     return;
 
                 Log.General("Received player spawn from {0}", id);
-                m_Clients[id].Spawn = true;
-
+                m_ModelsToLoad.Add(id);
+                
                 break;
             case (Int64)OPCODE.PLAYER_SHOOTS:
                 break;
@@ -268,7 +263,9 @@ public static class Client {
                 if (client.UserId == m_Session!.UserId)
                     continue;
 
-                CreatePlayer(client);
+                Log.General("Player {0} is joining the match!", client.UserId);
+                CreatePresence(client);
+                m_ModelsToLoad.Add(client.UserId);
             }
         } else if (presence.Leaves.Any()) {
             foreach (IUserPresence? client in presence.Leaves) {
