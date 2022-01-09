@@ -276,6 +276,9 @@ public static class Client {
                     continue;
 
                 m_Clients.Remove(client.UserId);
+
+                if (m_ModelsToLoad.Contains(client.UserId))
+                    m_ModelsToLoad.Remove(client.UserId);
             }
         }
     }
