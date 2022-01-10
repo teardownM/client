@@ -199,7 +199,7 @@ public static class Client {
     }
 
     public static void SpawnPlayer(string clientID) {
-        Shape.LoadVox(m_Clients[clientID].Model.sBody, "Assets/Models/player.vox", "", 1.0f);
+        Shape.LoadVox(m_Clients[clientID].Model.sBody, "Assets/Models/Player.vox", "", 1.0f);
         Body.SetTransform(m_Clients[clientID].Model.Body, new Transform(new Vector3(50, 10, 10), new Quaternion(0, 0, 0, 1)));
 
         // CSteamID steamID = new CSteamID(ulong.Parse(clientID));
@@ -296,24 +296,3 @@ public static class Client {
         }
     }
 }
-
-/*
-    =----- Information -----=
-
-    Connections:
-        -> Connect to server <-
-            -> Tell everyone you're connecting
-            -> Everyone will now append your ID to the list of connected clients and to an array called modelsToLoad
-            -> When connected <-
-                -> Tell everyone you're connected
-                -> Clients will now set connected to true
-                -> Clients now spawn your model if they're not already spawned (check via modelsToLoad)
-
-        -> Disconnect <-
-            -> Tell everyone you're disconnecting via Nakama Presence
-            -> Everyone will now remove your ID from the list of connected clients and from the array called modelsToLoad if exists
-
-    Positions:
-        1. PLAYER_POS Called -> Set Position of player
-        2. OnUpdate -> Update position of player and use interpolation
-*/
