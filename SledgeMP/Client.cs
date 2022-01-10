@@ -35,28 +35,31 @@ public class IClientData {
     public Transform Transform = new Transform();
 }
 
-public static class Client {
+public class Server {
     public class ServerLabel {
         public string? value { get; set; }
     }
 
-    private class Server {
-        [JsonProperty("match_id")]
-        public static string? MatchID { get; set; }
+    [JsonProperty("match_id")]
+    public static string? MatchID { get; set; }
 
-        [JsonProperty("authoritative")]
-        public static bool? Authoritative { get; set; }
+    [JsonProperty("authoritative")]
+    public static bool? Authoritative { get; set; }
 
-        [JsonProperty("label")]
-        public static ServerLabel? Label { get; set; }
+    [JsonProperty("label")]
+    public static ServerLabel? Label { get; set; }
 
-        [JsonProperty("tick_rate")]
-        public static int TickRate { get; set; } = 24; // ! Hardcoded
+    [JsonProperty("tick_rate")]
+    public static int TickRate { get; set; } = 24; // ! Hardcoded
 
-        [JsonProperty("handler_name")]
-        public static string? HandlerName { get; set; }
-    }
+    [JsonProperty("handler_name")]
+    public static string? HandlerName { get; set; }
 
+    public static string Name = "Default Sandbox";
+    public static uint Clients = 0;
+}
+
+public static class Client {
     // Dictionary of all current players in the game
     private static Dictionary<string, IClientData> m_Clients = new();
 
@@ -120,6 +123,7 @@ public static class Client {
             Log.General("{0} already in the game", client.UserId);
             CreatePresence(client);
             m_ModelsToLoad.Add(client.UserId);
+            Server.Clients += 1;
         }
 
         return m_Session;
@@ -339,6 +343,8 @@ public static class Client {
                 Log.General("Player {0} is joining the match!", client.UserId);
                 CreatePresence(client);
                 m_ModelsToLoad.Add(client.UserId);
+
+                Server.Clients += 1;
             }
         } else if (presence.Leaves.Any()) {
             foreach (IUserPresence? client in presence.Leaves) {
@@ -354,6 +360,8 @@ public static class Client {
                     m_ModelsToLoad.Remove(client.UserId);
 
                 Log.General("Player {0} has left the match!", client.UserId);
+
+                Server.Clients -= 1;
             }
         }
     }
