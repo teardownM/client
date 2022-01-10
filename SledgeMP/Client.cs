@@ -89,6 +89,8 @@ public static class Client {
             CreatePresence(client);
             m_ModelsToLoad.Add(client.UserId);
             Server.Clients += 1;
+            if (m_Connected)
+                OnClientLoad();
         }
 
         return m_Session;
@@ -143,7 +145,8 @@ public static class Client {
         Vector2 playerInput = Player.GetPlayerMovementInput();
         Transform playerTransform = Player.GetCameraTransform();
 
-        var posData = playerTransform.Position.X.ToString() + "," + playerTransform.Position.Y.ToString() + "," + playerTransform.Position.Z.ToString();
+        var posData = playerTransform.Position.X.ToString() + "," + playerTransform.Position.Y.ToString() + "," + playerTransform.Position.Z.ToString()
+            + "," + playerTransform.Rotation.X.ToString() + "," + playerTransform.Rotation.Y.ToString() + "," + playerTransform.Rotation.Z.ToString();
         // Log.General("Sending position data: {0}", posData);
 
         // Every local game tick, send client's position data to Nakama
@@ -249,12 +252,17 @@ public static class Client {
                 float x = float.Parse(playerMoveData[1], CultureInfo.InvariantCulture.NumberFormat);
                 float y = float.Parse(playerMoveData[2], CultureInfo.InvariantCulture.NumberFormat);
                 float z = float.Parse(playerMoveData[3], CultureInfo.InvariantCulture.NumberFormat);
+                float rx = float.Parse(playerMoveData[4], CultureInfo.InvariantCulture.NumberFormat);
+                float ry = float.Parse(playerMoveData[5], CultureInfo.InvariantCulture.NumberFormat);
+                float rz = float.Parse(playerMoveData[6], CultureInfo.InvariantCulture.NumberFormat);
+
+                Log.General("{0} {1} {2} {3} {4} {5}", x, y, z, rx, ry, rz);
 
 
                 Vector3 startPos = Body.GetPosition(m_Clients[playerMoveData[0]].Model!.Body!.Value);
                 Vector3 endPos = new Vector3(x, y, z);
 
-                m_Clients[playerMoveData[0]].Model!.Update(startPos, endPos, 1.0f, new Quaternion(0, 0, 0, 1));
+                m_Clients[playerMoveData[0]].Model!.Update(startPos, endPos, 1.0f, new Quaternion(rx, ry, rz, 1));
                 break;
 
             case (Int64)OPCODE.PLAYER_SPAWN:
@@ -277,6 +285,11 @@ public static class Client {
         }
     }
 
+    public static void OnClientLoad() {
+        Discord.Client!.UpdateState($"Playing with {Server.Clients} others");
+        Discord.Client!.UpdatePartySize((int)Server.Clients);
+    }
+
     public static void OnMatchPresence(IMatchPresenceEvent presence) {
         if (presence.Joins.Any()) {
             foreach (IUserPresence? client in presence.Joins) {
@@ -288,6 +301,9 @@ public static class Client {
                 m_ModelsToLoad.Add(client.UserId);
 
                 Server.Clients += 1;
+
+                if (m_Connected)
+                    OnClientLoad();
             }
         } else if (presence.Leaves.Any()) {
             foreach (IUserPresence? client in presence.Leaves) {
@@ -310,6 +326,8 @@ public static class Client {
                 Log.General("Player {0} has left the match!", client.UserId);
 
                 Server.Clients -= 1;
+                if (m_Connected)
+                    Discord.Client!.UpdatePartySize((int)Server.Clients);
             }
         }
     }

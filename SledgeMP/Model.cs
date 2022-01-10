@@ -56,7 +56,9 @@ public class Model {
         Shape.SetLocalTransform(sLeftLeg!.Value, new Transform(new Vector3(0, 0, 0), new Quaternion(0, 0.7071068f, 0.7071068f, 0)));
         Shape.SetLocalTransform(sRightLeg!.Value, new Transform(new Vector3(0.3f, 0, 0), new Quaternion(0, 0.7071068f, 0.7071068f, 0)));
 
-        SledgeLib.Body.SetRotation(Body!.Value, new Quaternion(0, 0.7071068f, 0.7071068f, 0));
+        Quaternion camRot = Player.GetCameraTransform().Rotation;
+        SledgeLib.Body.SetRotation(Body!.Value, Quaternion.CreateFromYawPitchRoll((float)GetPitch(camRot), 0, 0));
+        SledgeLib.Body.SetDynamic(Body!.Value, false);
     }
 
     public void Remove() {
