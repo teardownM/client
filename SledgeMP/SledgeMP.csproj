@@ -24,5 +24,8 @@
         <Reference Include="Newtonsoft.JSON">
           <HintPath>dep/Newtonsoft.Json.dll</HintPath>
         </Reference>
+        <Reference Include="DiscordRPC">
+          <HintPath>dep/DiscordRPC.dll</HintPath>
+        </Reference>
       </ItemGroup>
 </Project>

@@ -4,6 +4,8 @@ using SledgeLib;
 using Steamworks;
 using Nakama;
 
+using DiscordRPC;
+
 /* Main things go here such as callbacks */
 
 public class SledgeMP {
@@ -34,6 +36,7 @@ public class SledgeMP {
 
     private static dCallback cb_PostUpdateFunc = new dCallback(() => {
         Client.OnUpdate();
+        Discord.Update();
     });
 
     private static dCallback cb_PrePlayerUpdateFunc = new dCallback(() => {
@@ -60,6 +63,11 @@ public class SledgeMP {
             return;
         }
 
+        if (!Discord.Initialize()) {
+            Log.Error("Discord RPC failed to initialize");
+            return;
+        }
+
         Client.OnInitialize();
 
         cb_PostPlayerUpdate = new CCallback(ECallbackType.PostPlayerUpdate, cb_PostPlayerUpdateFunc);
@@ -78,6 +86,8 @@ public class SledgeMP {
                 Log.General("Connecting to server: {0}:{1}", m_IP, m_Port);
             }
         });
+
+        Discord.SetPresence(Discord.EDiscordState.MainMenu);
     }
 
     public static void OnReload() {
@@ -96,5 +106,7 @@ public class SledgeMP {
 
         if (m_bSteamInitialized)
             SteamAPI.Shutdown();
+
+        Discord.Shutdown();
     }
 }

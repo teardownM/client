@@ -89,6 +89,8 @@ public static class Client {
             return await Task.FromResult<ISession>(null!);
         }
 
+        Discord.SetPresence(Discord.EDiscordState.Connecting);
+
         try {
             m_Session = await m_Connection.AuthenticateDeviceAsync(m_DeviceID, m_DeviceID);
             Log.Verbose("Successfully authenticated");
@@ -138,6 +140,8 @@ public static class Client {
 
             if (Game.GetState() != EGameState.Menu)
                 Game.SetState(EGameState.Menu);
+
+            Discord.SetPresence(Discord.EDiscordState.MainMenu);
         } else {
             Log.General("Not connected to server");
         }
@@ -150,7 +154,7 @@ public static class Client {
         if (m_ModelsToLoad.Any()) {
             foreach (var userID in m_ModelsToLoad.ToList()) {
                 // If it's not the local player, load in their vox player model
-                if (userID != m_Session!.UserId) {
+                if (userID != m_Session!.UserId && m_Clients[userID].Spawned == true) {
                     SpawnPlayer(userID);
                     m_ModelsToLoad.Remove(userID);
 
@@ -197,10 +201,9 @@ public static class Client {
     public static void SpawnPlayer(string clientID) {
         Shape.LoadVox(m_Clients[clientID].Model.sBody, "Assets/Models/Player.vox", "", 1.0f);
         Body.SetTransform(m_Clients[clientID].Model.Body, new Transform(new Vector3(50, 10, 10), new Quaternion(0, 0, 0, 1)));
-        m_Clients[clientID].Spawned = true;
 
-        CSteamID steamID = new CSteamID(ulong.Parse(clientID));
-        Log.General("{0} has spawned", SteamFriends.GetFriendPersonaName(steamID));
+        // CSteamID steamID = new CSteamID(ulong.Parse(clientID));
+        Log.General("{0} has spawned", clientID);
     }
 
     public static void OnStateChange(uint iState) {
@@ -222,7 +225,9 @@ public static class Client {
 
                     // 7. Notify every player local client has loaded in and should spawn their model
                     m_Socket!.SendMatchStateAsync(Server.MatchID, (long)OPCODE.PLAYER_SPAWN, "");
+                    Discord.SetPresence(Discord.EDiscordState.Connected);
                 }
+
                 break;
             default:
                 break;
@@ -245,12 +250,14 @@ public static class Client {
                 break;
             case (Int64)OPCODE.PLAYER_SPAWN:
                 // This message could be received in the menu (while connecting and not in game yet)
-                if (!Game.IsPlaying())
-                    break;
+                if (Game.GetState() != EGameState.Playing)
+                    return;
 
                 string id = System.Text.Encoding.Default.GetString(newState.State);
                 if (id == m_Session!.UserId)
                     return;
+
+                m_Clients[id].Spawned = true;
 
                 Log.General("Received player spawn from {0}", id);
                 m_ModelsToLoad.Add(id);
