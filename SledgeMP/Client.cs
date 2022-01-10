@@ -172,10 +172,7 @@ public static class Client {
         m_Socket.SendMatchStateAsync(Server.MatchID, (long)OPCODE.PLAYER_MOVE, posData);
     }
 
-    // Presence means another player / client that is NOT the local player.
     public static void CreatePresence(IUserPresence player) {
-        Log.General("Creating presence {0}", player.UserId);
-
         // Create a static body for the player, set their position
         uint body = Body.Create();
         Body.SetDynamic(body, false);
@@ -212,6 +209,7 @@ public static class Client {
                 if (Server.MatchID != null)
                     Disconnect();
                 break;
+
             case (uint)EGameState.Playing:
                 // 1. Player joins server from the menu
                 // 2. Connects to match instantly
@@ -231,11 +229,6 @@ public static class Client {
         }
     }
 
-    /*
-        Client1 spawns in and sends PLAYER_SPAWN
-        Rest of the clients recieve that and say, "Hey, I'll spawn you in and send you a PLAYER_SPAWN"
-    */
-
     public static void OnMatchState(IMatchState newState) {
         switch (newState.OpCode) {
             case (Int64)OPCODE.PLAYER_MOVE:
@@ -248,6 +241,7 @@ public static class Client {
 
                 Body.SetPosition(m_Clients[playerMoveData[0]].Model.Body, new Vector3(x, y, z));
                 Body.SetTransform(m_Clients[playerMoveData[0]].Model.Body, new Transform(new Vector3(x, y, z), new Quaternion(0, 0.7071068f, 0.7071068f, 0)));
+
                 break;
             case (Int64)OPCODE.PLAYER_SPAWN:
                 // This message could be received in the menu (while connecting and not in game yet)
@@ -295,24 +289,3 @@ public static class Client {
         }
     }
 }
-
-/*
-    =----- Information -----=
-
-    Connections:
-        -> Connect to server <-
-            -> Tell everyone you're connecting
-            -> Everyone will now append your ID to the list of connected clients and to an array called modelsToLoad
-            -> When connected <-
-                -> Tell everyone you're connected
-                -> Clients will now set connected to true
-                -> Clients now spawn your model if they're not already spawned (check via modelsToLoad)
-
-        -> Disconnect <-
-            -> Tell everyone you're disconnecting via Nakama Presence
-            -> Everyone will now remove your ID from the list of connected clients and from the array called modelsToLoad if exists
-
-    Positions:
-        1. PLAYER_POS Called -> Set Position of player
-        2. OnUpdate -> Update position of player and use interpolation
-*/
