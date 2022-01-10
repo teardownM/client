@@ -144,10 +144,12 @@ public static class Client {
 
         Vector2 playerInput = Player.GetPlayerMovementInput();
         Transform playerTransform = Player.GetCameraTransform();
+        Quaternion playerRotation = Player.GetPlayerCameraTransform().Rotation;
 
         var posData = playerTransform.Position.X.ToString() + "," + playerTransform.Position.Y.ToString() + "," + playerTransform.Position.Z.ToString()
-            + "," + playerTransform.Rotation.X.ToString() + "," + playerTransform.Rotation.Y.ToString() + "," + playerTransform.Rotation.Z.ToString();
+            + "," + playerRotation.X.ToString() + "," + playerRotation.Y.ToString() + "," + playerRotation.Z.ToString() + "," + playerRotation.W.ToString();
         // Log.General("Sending position data: {0}", posData);
+        // Log.General("{0} {1} {2} {3} {4} {5} {6}", playerTransform.Position.X, playerTransform.Position.Y, playerTransform.Position.Z, playerRotation.X, playerRotation.Y, playerRotation.Z, playerRotation.W);
 
         // Every local game tick, send client's position data to Nakama
         m_Socket.SendMatchStateAsync(Server.MatchID, (long)OPCODE.PLAYER_MOVE, posData);
@@ -255,6 +257,7 @@ public static class Client {
                 float rx = float.Parse(playerMoveData[4], CultureInfo.InvariantCulture.NumberFormat);
                 float ry = float.Parse(playerMoveData[5], CultureInfo.InvariantCulture.NumberFormat);
                 float rz = float.Parse(playerMoveData[6], CultureInfo.InvariantCulture.NumberFormat);
+                float rw = float.Parse(playerMoveData[7], CultureInfo.InvariantCulture.NumberFormat);
 
                 Log.General("{0} {1} {2} {3} {4} {5}", x, y, z, rx, ry, rz);
 
@@ -262,7 +265,7 @@ public static class Client {
                 Vector3 startPos = Body.GetPosition(m_Clients[playerMoveData[0]].Model!.Body!.Value);
                 Vector3 endPos = new Vector3(x, y, z);
 
-                m_Clients[playerMoveData[0]].Model!.Update(startPos, endPos, 1.0f, new Quaternion(rx, ry, rz, 1));
+                m_Clients[playerMoveData[0]].Model!.Update(startPos, endPos, 1.0f, new Quaternion(rx, ry, rz, rw));
                 break;
 
             case (Int64)OPCODE.PLAYER_SPAWN:
@@ -310,8 +313,6 @@ public static class Client {
                 if (client.UserId == m_Session!.UserId)
                     continue;
 
-                m_Clients.Remove(client.UserId);
-
                 if (m_Clients.ContainsKey(client.UserId) && !m_ModelsToLoad.Contains(client.UserId))
                     Body.Destroy(m_Clients[client.UserId].Model!.Body!.Value);
 
@@ -322,6 +323,8 @@ public static class Client {
                     Log.General("Destroying body for {0}", client.UserId);
                     Body.Destroy(m_Clients[client.UserId].Model!.Body!.Value);
                 }
+
+                m_Clients.Remove(client.UserId);
 
                 Log.General("Player {0} has left the match!", client.UserId);
 

@@ -114,6 +114,7 @@ public class SledgeMP {
         if (m_bSteamInitialized)
             SteamAPI.Shutdown();
 
-        Discord.Shutdown();
+        if (Discord.Client != null && !Discord.Client.IsDisposed)
+            Discord.Shutdown();
     }
 }
