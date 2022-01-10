@@ -206,7 +206,7 @@ public static class Client {
     }
 
     public static void SpawnPlayer(string clientID) {
-        Shape.LoadVox(m_Clients[clientID].Model.sBody, "Assets/Models/player.vox", "", 1.0f);
+        Shape.LoadVox(m_Clients[clientID].Model.sBody, "Assets/Models/player2.vox", "", 1.0f);
         Body.SetTransform(m_Clients[clientID].Model.Body, new Transform(new Vector3(50, 10, 10), new Quaternion(0, 0, 0, 1)));
         m_Clients[clientID].Spawned = true;
 
@@ -293,6 +293,9 @@ public static class Client {
                     continue;
 
                 m_Clients.Remove(client.UserId);
+
+                if (m_Clients.ContainsKey(client.UserId))
+                    Body.Destroy(m_Clients[client.UserId].Model.Body);
 
                 if (m_ModelsToLoad.Contains(client.UserId))
                     m_ModelsToLoad.Remove(client.UserId);
