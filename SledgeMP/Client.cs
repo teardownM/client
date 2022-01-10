@@ -8,16 +8,7 @@ using Newtonsoft.Json;
 using Nakama;
 using System.Globalization;
 
-public class Model {
-    public uint Body = 0;
-
-    public uint sBody = 0;
-    public uint sHead = 0;
-    public uint sLeftArm = 0;
-    public uint sLeftLeg = 0;
-    public uint sRightArm = 0;
-    public uint sRightLeg = 0;
-}
+using System.Diagnostics;
 
 public class IClientData {
     public string? SessionID;
@@ -29,32 +20,11 @@ public class IClientData {
 
     public ushort? Reason;
 
-    public Model Model = new Model();
+    public PlayerModel? PlayerModel;
     public Transform Transform = new Transform();
 }
 
 public static class Client {
-    public class ServerLabel {
-        public string? value { get; set; }
-    }
-
-    private class Server {
-        [JsonProperty("match_id")]
-        public static string? MatchID { get; set; }
-
-        [JsonProperty("authoritative")]
-        public static bool? Authoritative { get; set; }
-
-        [JsonProperty("label")]
-        public static ServerLabel? Label { get; set; }
-
-        [JsonProperty("tick_rate")]
-        public static int? TickRate { get; set; }
-
-        [JsonProperty("handler_name")]
-        public static string? HandlerName { get; set; }
-    }
-
     // Dictionary of all current players in the game
     private static Dictionary<string, IClientData> m_Clients = new();
 
@@ -81,6 +51,9 @@ public static class Client {
     }
 
     public static async Task<ISession> Connect(string ip, ushort port) {
+        if (Server.MatchID != null)
+            Disconnect();
+
         // Establish a connection to Nakama server
         m_Connection = new Nakama.Client("http", ip, port, "defaultkey");
         m_Connection.Timeout = 1;
@@ -109,14 +82,16 @@ public static class Client {
         JsonConvert.DeserializeObject<Server>(response.Payload.Substring(1, response.Payload.Length - 2));
 
         IMatch match = await m_Socket.JoinMatchAsync(Server.MatchID);
-        m_Connected = true;
         Log.Verbose("Successfully connected to match {0}", Server.MatchID!);
+        m_Connected = true;
 
         foreach (IUserPresence client in match.Presences) {
             Log.General("{0} already in the game", client.UserId);
             CreatePresence(client);
             m_ModelsToLoad.Add(client.UserId);
         }
+
+        OnClientLoad();
 
         return m_Session;
     }
@@ -147,18 +122,19 @@ public static class Client {
         }
     }
 
-    public static void OnUpdate() {
-        if (!m_Connected || Game.GetState() != EGameState.Playing)
+    public static void Tick() {
+        if (!m_Connected) {
             return;
+        }
 
         if (m_ModelsToLoad.Any()) {
-            foreach (var userID in m_ModelsToLoad.ToList()) {
+            foreach (var userId in m_ModelsToLoad.ToList()) {
                 // If it's not the local player, load in their vox player model
-                if (userID != m_Session!.UserId && m_Clients[userID].Spawned == true) {
-                    SpawnPlayer(userID);
-                    m_ModelsToLoad.Remove(userID);
+                if (userId != m_Session!.UserId) {
+                    SpawnPlayer(userId);
+                    m_ModelsToLoad.Remove(userId);
 
-                    Log.General("Loaded {0}'s model into the game", userID);
+                    Log.General("Loaded {0}'s model into the game", userId);
                 }
             }
         }
@@ -168,8 +144,12 @@ public static class Client {
 
         Vector2 playerInput = Player.GetPlayerMovementInput();
         Transform playerTransform = Player.GetCameraTransform();
+        Quaternion playerRotation = Player.GetPlayerCameraTransform().Rotation;
 
-        var posData = playerTransform.Position.X.ToString() + "," + playerTransform.Position.Y.ToString() + "," + playerTransform.Position.Z.ToString();
+        var posData = playerTransform.Position.X.ToString() + "," + playerTransform.Position.Y.ToString() + "," + playerTransform.Position.Z.ToString()
+            + "," + playerRotation.X.ToString() + "," + playerRotation.Y.ToString() + "," + playerRotation.Z.ToString() + "," + playerRotation.W.ToString();
+
+        //Log.General("{0} {1} {2} {3} {4} {5} {6}", playerTransform.Position.X, playerTransform.Position.Y, playerTransform.Position.Z, playerRotation.X, playerRotation.Y, playerRotation.Z, playerRotation.W);
 
         // Every local game tick, send client's position data to Nakama
         m_Socket.SendMatchStateAsync(Server.MatchID, (long)OPCODE.PLAYER_MOVE, posData);
@@ -181,9 +161,14 @@ public static class Client {
         Body.SetDynamic(body, false);
         Body.SetPosition(body, new Vector3(0, 0, 0));
 
-        Model playerModel = new() {
+        PlayerModel playerModel = new() {
             Body = body,
-            sBody = Shape.Create(body)
+            sBody = Shape.Create(body),
+            sLeftArm = Shape.Create(body),
+            sRightArm = Shape.Create(body),
+            sLeftLeg = Shape.Create(body),
+            sRightLeg = Shape.Create(body),
+            sHead = Shape.Create(body)
         };
 
         IClientData newPlayer = new() {
@@ -192,17 +177,20 @@ public static class Client {
             Status = player.Status,
             UserID = player.UserId,
             Spawned = false,
-            Model = playerModel
+            PlayerModel = playerModel
         };
 
         m_Clients.Add(player.UserId, newPlayer);
+        Log.General("Created Player Presence");
     }
 
     public static void SpawnPlayer(string clientID) {
-        Shape.LoadVox(m_Clients[clientID].Model.sBody, "Assets/Models/Player.vox", "", 1.0f);
-        Body.SetTransform(m_Clients[clientID].Model.Body, new Transform(new Vector3(50, 10, 10), new Quaternion(0, 0, 0, 1)));
+        Shape.LoadVox((uint)m_Clients[clientID].PlayerModel.sBody, "Assets/Models/Player.vox", "", 1.0f);
 
-        // CSteamID steamID = new CSteamID(ulong.Parse(clientID));
+        Body.SetTransform((uint)m_Clients[clientID].PlayerModel.Body, new Transform(new Vector3(50, 10, 10), new Quaternion(0, 0.7071068f, 0.7071068f, 0)));
+
+        m_Clients[clientID].Spawned = true;
+
         Log.General("{0} has spawned", clientID);
     }
 
@@ -221,6 +209,7 @@ public static class Client {
                 // 5. EGameState changes to playing
                 // 6. Spawn players in m_ModelsToLoad
                 if (Server.MatchID != null) { // <-- Checking for Server.MatchID is the same as checking if m_Connected is true
+                    m_Connected = true;
                     Log.Verbose("Local client has loaded into the map.");
 
                     // 7. Notify every player local client has loaded in and should spawn their model
@@ -237,30 +226,30 @@ public static class Client {
     public static void OnMatchState(IMatchState newState) {
         switch (newState.OpCode) {
             case (Int64)OPCODE.PLAYER_MOVE:
-                // Date structure: user_id,x,y,z    
-                var playerMoveData = System.Text.Encoding.Default.GetString(newState.State).Split(',').ToList();
+                List<string> playerMoveData = System.Text.Encoding.Default.GetString(newState.State).Split(',').ToList();
 
                 float x = float.Parse(playerMoveData[1], CultureInfo.InvariantCulture.NumberFormat);
                 float y = float.Parse(playerMoveData[2], CultureInfo.InvariantCulture.NumberFormat);
                 float z = float.Parse(playerMoveData[3], CultureInfo.InvariantCulture.NumberFormat);
+                float rx = float.Parse(playerMoveData[4], CultureInfo.InvariantCulture.NumberFormat);
+                float ry = float.Parse(playerMoveData[5], CultureInfo.InvariantCulture.NumberFormat);
+                float rz = float.Parse(playerMoveData[6], CultureInfo.InvariantCulture.NumberFormat);
+                float rw = float.Parse(playerMoveData[7], CultureInfo.InvariantCulture.NumberFormat);
 
-                Body.SetPosition(m_Clients[playerMoveData[0]].Model.Body, new Vector3(x, y, z));
-                Body.SetTransform(m_Clients[playerMoveData[0]].Model.Body, new Transform(new Vector3(x, y, z), new Quaternion(0, 0.7071068f, 0.7071068f, 0)));
-
+                Body.SetTransform((uint)m_Clients[playerMoveData[0]].PlayerModel!.Body, new Transform(new Vector3(x, y, z), new Quaternion(rx, ry, rz, rw)));
                 break;
+
             case (Int64)OPCODE.PLAYER_SPAWN:
                 // This message could be received in the menu (while connecting and not in game yet)
                 if (Game.GetState() != EGameState.Playing)
-                    return;
+                    break;
 
                 string id = System.Text.Encoding.Default.GetString(newState.State);
                 if (id == m_Session!.UserId)
                     return;
 
-                m_Clients[id].Spawned = true;
-
-                Log.General("Received player spawn from {0}", id);
-                m_ModelsToLoad.Add(id);
+                // m_Clients[id].Spawned = true;
+                Log.General("{0} has spawned", id);
                 
                 break;
             case (Int64)OPCODE.PLAYER_SHOOTS:
@@ -268,6 +257,10 @@ public static class Client {
             default:
                 break;
         }
+    }
+
+    public static void OnClientLoad() {
+        Discord.Client!.UpdateState($"Playing with {m_Clients.Count()} others");
     }
 
     public static void OnMatchPresence(IMatchPresenceEvent presence) {
@@ -279,19 +272,30 @@ public static class Client {
                 Log.General("Player {0} is joining the match!", client.UserId);
                 CreatePresence(client);
                 m_ModelsToLoad.Add(client.UserId);
+
+
+                if (m_Connected)
+                    OnClientLoad();
             }
         } else if (presence.Leaves.Any()) {
             foreach (IUserPresence? client in presence.Leaves) {
                 if (client.UserId == m_Session!.UserId)
                     continue;
 
-                m_Clients.Remove(client.UserId);
-
                 if (m_Clients.ContainsKey(client.UserId) && !m_ModelsToLoad.Contains(client.UserId))
-                    Body.Destroy(m_Clients[client.UserId].Model.Body);
+                    Body.Destroy(m_Clients[client.UserId].PlayerModel!.Body!.Value);
 
                 if (m_ModelsToLoad.Contains(client.UserId))
                     m_ModelsToLoad.Remove(client.UserId);
+
+                if (m_Clients[client.UserId].PlayerModel!.Body != null) {
+                    Log.General("Destroying body for {0}", client.UserId);
+                    Body.Destroy(m_Clients[client.UserId].PlayerModel!.Body!.Value);
+                }
+
+                m_Clients.Remove(client.UserId);
+
+                Log.General("Player {0} has left the match!", client.UserId);
             }
         }
     }
