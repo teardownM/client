@@ -255,7 +255,7 @@ public static class Client {
                 float z = float.Parse(playerMoveData[3], CultureInfo.InvariantCulture.NumberFormat);
 
                 Body.SetPosition(m_Clients[playerMoveData[0]].Model.Body, new Vector3(x, y, z));
-                Body.SetTransform(m_Clients[playerMoveData[0]].Model.Body, new Transform(new Vector3(x, y, z), new Quaternion(0, 0, 0, 1)));
+                Body.SetTransform(m_Clients[playerMoveData[0]].Model.Body, new Transform(new Vector3(x, y, z), new Quaternion(0, 0.7071068f, 0.7071068f, 0)));
                 break;
             case (Int64)OPCODE.PLAYER_SPAWN:
                 // This message could be received in the menu (while connecting and not in game yet)
