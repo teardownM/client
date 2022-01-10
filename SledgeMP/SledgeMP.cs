@@ -19,6 +19,7 @@ public class SledgeMP {
     private static CCallback? cb_PostUpdate;
     private static CCallback? cb_PlayerSpawn;
     private static CCallback? cb_StateChange;
+    private static CCallback? cb_Tick;
 
     private static CBind? ConnectGameBind;
     private static CBind? DisconnectGameBind;
@@ -35,7 +36,6 @@ public class SledgeMP {
     });
 
     private static dCallback cb_PostUpdateFunc = new dCallback(() => {
-        Client.OnUpdate();
         Discord.Update();
     });
 
@@ -49,6 +49,10 @@ public class SledgeMP {
 
     private static dCallback cb_PlayerSpawnFunc = new dCallback(() => {
 
+    });
+
+    private static dCallback cb_TickFunc = new dCallback(() => {
+        Client.Tick();
     });
 
     public static void OnInitialize() {
@@ -76,6 +80,7 @@ public class SledgeMP {
         cb_PreUpdate = new CCallback(ECallbackType.PreUpdate, cb_PrePlayerUpdateFunc);
         cb_PlayerSpawn = new CCallback(ECallbackType.PlayerSpawn, cb_PlayerSpawnFunc);
         cb_StateChange = new CCallback(ECallbackType.StateChange, fStateChange);
+        cb_Tick = new CCallback(ECallbackType.Tick, cb_TickFunc);
 
         DisconnectGameBind = new CBind(EKeyCode.VK_B, fDisconnectCallback);
         ConnectGameBind = new CBind(EKeyCode.VK_K, async () => {
@@ -92,6 +97,7 @@ public class SledgeMP {
 
     public static void OnReload() {
         Log.General("[ SledgeMP Reloaded ]");
+        Discord.Shutdown();
     }
 
     public static void OnShutdown() {
@@ -101,6 +107,7 @@ public class SledgeMP {
         if (cb_PostUpdate != null) { cb_PostUpdate.Unregister(); cb_PostUpdate = null; }
         if (cb_PlayerSpawn != null) { cb_PlayerSpawn.Unregister(); cb_PlayerSpawn = null; }
         if (cb_StateChange != null) { cb_StateChange.Unregister(); cb_StateChange = null; }
+        if (cb_Tick != null) { cb_Tick.Unregister(); cb_Tick = null; }
 
         Log.General("SledgeMP Shutdown");
 

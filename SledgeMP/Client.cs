@@ -8,6 +8,8 @@ using Newtonsoft.Json;
 using Nakama;
 using System.Globalization;
 
+using System.Diagnostics;
+
 public class Model {
     public uint Body = 0;
 
@@ -49,7 +51,7 @@ public static class Client {
         public static ServerLabel? Label { get; set; }
 
         [JsonProperty("tick_rate")]
-        public static int? TickRate { get; set; }
+        public static int TickRate { get; set; } = 24; // ! Hardcoded
 
         [JsonProperty("handler_name")]
         public static string? HandlerName { get; set; }
@@ -81,6 +83,9 @@ public static class Client {
     }
 
     public static async Task<ISession> Connect(string ip, ushort port) {
+        if (Server.MatchID != null)
+            Disconnect();
+
         // Establish a connection to Nakama server
         m_Connection = new Nakama.Client("http", ip, port, "defaultkey");
         m_Connection.Timeout = 1;
@@ -109,7 +114,6 @@ public static class Client {
         JsonConvert.DeserializeObject<Server>(response.Payload.Substring(1, response.Payload.Length - 2));
 
         IMatch match = await m_Socket.JoinMatchAsync(Server.MatchID);
-        m_Connected = true;
         Log.Verbose("Successfully connected to match {0}", Server.MatchID!);
 
         foreach (IUserPresence client in match.Presences) {
@@ -147,18 +151,19 @@ public static class Client {
         }
     }
 
-    public static void OnUpdate() {
-        if (!m_Connected || Game.GetState() != EGameState.Playing)
+    public static void Tick() {
+        if (!m_Connected) {
             return;
+        }
 
         if (m_ModelsToLoad.Any()) {
-            foreach (var userID in m_ModelsToLoad.ToList()) {
+            foreach (var userId in m_ModelsToLoad.ToList()) {
                 // If it's not the local player, load in their vox player model
-                if (userID != m_Session!.UserId && m_Clients[userID].Spawned == true) {
-                    SpawnPlayer(userID);
-                    m_ModelsToLoad.Remove(userID);
+                if (userId != m_Session!.UserId) {
+                    SpawnPlayer(userId);
+                    m_ModelsToLoad.Remove(userId);
 
-                    Log.General("Loaded {0}'s model into the game", userID);
+                    Log.General("Loaded {0}'s model into the game", userId);
                 }
             }
         }
@@ -170,9 +175,36 @@ public static class Client {
         Transform playerTransform = Player.GetCameraTransform();
 
         var posData = playerTransform.Position.X.ToString() + "," + playerTransform.Position.Y.ToString() + "," + playerTransform.Position.Z.ToString();
+        // Log.General("Sending position data: {0}", posData);
 
         // Every local game tick, send client's position data to Nakama
         m_Socket.SendMatchStateAsync(Server.MatchID, (long)OPCODE.PLAYER_MOVE, posData);
+
+        // if (!m_Connected || Game.GetState() != EGameState.Playing || Server.MatchID != null)
+        //     return;
+
+        // if (m_ModelsToLoad.Any()) {
+        //     foreach (var userID in m_ModelsToLoad.ToList()) {
+        //         // If it's not the local player, load in their vox player model
+        //         if (userID != m_Session!.UserId) {
+        //             SpawnPlayer(userID);
+        //             m_ModelsToLoad.Remove(userID);
+
+        //             Log.General("Loaded {0}'s model into the game", userID);
+        //         }
+        //     }
+        // }
+
+        // // if (m_Socket == null || m_Session == null || Server.MatchID == null)
+        // //     return;
+
+        // Vector2 playerInput = Player.GetPlayerMovementInput();
+        // Transform playerTransform = Player.GetCameraTransform();
+
+        // var posData = playerTransform.Position.X.ToString() + "," + playerTransform.Position.Y.ToString() + "," + playerTransform.Position.Z.ToString();
+
+        // // Every local game tick, send client's position data to Nakama
+        // m_Socket!.SendMatchStateAsync(Server.MatchID, (long)OPCODE.PLAYER_MOVE, posData);
     }
 
     public static void CreatePresence(IUserPresence player) {
@@ -199,11 +231,11 @@ public static class Client {
     }
 
     public static void SpawnPlayer(string clientID) {
+        Log.General("{0} has spawned", clientID);
+
         Shape.LoadVox(m_Clients[clientID].Model.sBody, "Assets/Models/Player.vox", "", 1.0f);
         Body.SetTransform(m_Clients[clientID].Model.Body, new Transform(new Vector3(50, 10, 10), new Quaternion(0, 0, 0, 1)));
-
-        // CSteamID steamID = new CSteamID(ulong.Parse(clientID));
-        Log.General("{0} has spawned", clientID);
+        m_Clients[clientID].Spawned = true;
     }
 
     public static void OnStateChange(uint iState) {
@@ -221,7 +253,9 @@ public static class Client {
                 // 5. EGameState changes to playing
                 // 6. Spawn players in m_ModelsToLoad
                 if (Server.MatchID != null) { // <-- Checking for Server.MatchID is the same as checking if m_Connected is true
+                    m_Connected = true;
                     Log.Verbose("Local client has loaded into the map.");
+                    // m_Connected = true;
 
                     // 7. Notify every player local client has loaded in and should spawn their model
                     m_Socket!.SendMatchStateAsync(Server.MatchID, (long)OPCODE.PLAYER_SPAWN, "");
@@ -237,29 +271,55 @@ public static class Client {
     public static void OnMatchState(IMatchState newState) {
         switch (newState.OpCode) {
             case (Int64)OPCODE.PLAYER_MOVE:
-                // Date structure: user_id,x,y,z    
-                var playerMoveData = System.Text.Encoding.Default.GetString(newState.State).Split(',').ToList();
+                // Stopwatch sw = new Stopwatch();
+                // sw.Start();
+
+                // float timeSinceLastFrame = (float)sw.ElapsedMilliseconds;
+
+                // float delta = Game.GetUpdateDelta();
+                // elapsedTime += timeSinceLastFrame;
+
+                // float lerp = elapsedTime / (float)Server.TickRate;
+
+                List<string> playerMoveData = System.Text.Encoding.Default.GetString(newState.State).Split(',').ToList();
 
                 float x = float.Parse(playerMoveData[1], CultureInfo.InvariantCulture.NumberFormat);
                 float y = float.Parse(playerMoveData[2], CultureInfo.InvariantCulture.NumberFormat);
                 float z = float.Parse(playerMoveData[3], CultureInfo.InvariantCulture.NumberFormat);
 
-                Body.SetPosition(m_Clients[playerMoveData[0]].Model.Body, new Vector3(x, y, z));
-                Body.SetTransform(m_Clients[playerMoveData[0]].Model.Body, new Transform(new Vector3(x, y, z), new Quaternion(0, 0.7071068f, 0.7071068f, 0)));
+                Vector3 startPos = Body.GetPosition(m_Clients[playerMoveData[0]].Model.Body);
+                Vector3 endPos = new Vector3(x, y, z);
+
+                Body.SetTransform(m_Clients[playerMoveData[0]].Model.Body, new Transform(Vector3.Lerp(startPos, endPos, 1), new Quaternion(0, 0.7071068f, 0.7071068f, 0)));
+                // Log.General("Lerping {0}", (Vector3.Lerp(startPos, endPos, elapsedTime / 1).ToString()));
+
+                // if (elapsedTime <= lerp) {
+                //     Log.General("Lerping {0}", (Vector3.Lerp(startPos, endPos, elapsedTime / lerp).ToString()));
+                //     Body.SetTransform(m_Clients[playerMoveData[0]].Model.Body, new Transform(Vector3.Lerp(startPos, endPos, elapsedTime / lerp), new Quaternion(0, 0.7071068f, 0.7071068f, 0)));
+                // } else {
+                //     elapsedTime = 0;
+                //     Log.General("Not Lerping");
+                //     Body.SetTransform(m_Clients[playerMoveData[0]].Model.Body, new Transform(endPos, new Quaternion(0, 0.7071068f, 0.7071068f, 0)));
+                // }
+
+                // sw.Stop();
 
                 break;
+
             case (Int64)OPCODE.PLAYER_SPAWN:
                 // This message could be received in the menu (while connecting and not in game yet)
                 if (Game.GetState() != EGameState.Playing)
-                    return;
+                    break;
+
+                // if (!Game.IsPlaying())
+                //     break;
 
                 string id = System.Text.Encoding.Default.GetString(newState.State);
                 if (id == m_Session!.UserId)
                     return;
 
-                m_Clients[id].Spawned = true;
-
-                Log.General("Received player spawn from {0}", id);
+                // m_Clients[id].Spawned = true;
+                Log.General("{0} has spawned", id);
                 m_ModelsToLoad.Add(id);
                 
                 break;
@@ -292,6 +352,8 @@ public static class Client {
 
                 if (m_ModelsToLoad.Contains(client.UserId))
                     m_ModelsToLoad.Remove(client.UserId);
+
+                Log.General("Player {0} has left the match!", client.UserId);
             }
         }
     }
