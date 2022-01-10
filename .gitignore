@@ -1,5 +1,7 @@
 .vs/*
 Lib/bin/*
 Lib/obj/*
+SledgeMP/bin/*
+SledgeMP/obj/*
 
 .cookie
