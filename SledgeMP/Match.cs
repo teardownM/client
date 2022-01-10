@@ -1,0 +1,199 @@
+﻿using Nakama;
+using Newtonsoft.Json;
+using SledgeLib;
+using System.Globalization;
+using System.Numerics;
+
+public static class Match
+{
+    // Dictionary of all current players in the game
+    public static Dictionary<string, IClientData> m_Clients = new();
+
+    public enum OPCODE : Int64
+    {
+        PLAYER_MOVE = 1,
+        PLAYER_SPAWN = 2,
+        PLAYER_SHOOTS = 3,
+        PLAYER_JOINS = 4,
+        PLAYER_GRABS = 5
+    }
+
+    /**
+     * Creates an instance of a client connected.
+     */
+    public static void CreatePresence(IUserPresence player)
+    {
+        uint body = Body.Create();
+        Body.SetDynamic(body, false);
+        Body.SetPosition(body, new Vector3(0, 0, 0));
+
+        PlayerModel playerModel = new()
+        {
+            Body = body,
+            sBody = Shape.Create(body),
+            sLeftArm = Shape.Create(body),
+            sRightArm = Shape.Create(body),
+            sLeftLeg = Shape.Create(body),
+            sRightLeg = Shape.Create(body),
+            sHead = Shape.Create(body)
+        };
+
+        IClientData newPlayer = new()
+        {
+            SessionID = player.SessionId,
+            Username = player.UserId,
+            Status = player.Status,
+            UserID = player.UserId,
+            Spawned = false,
+            PlayerModel = playerModel
+        };
+
+        m_Clients.Add(player.UserId, newPlayer);
+        Log.General("Created Player Presence");
+    }
+
+    public static async Task<ISession> Connect(string ip, ushort port)
+    {
+        if (Server.MatchID != null)
+            Disconnect();
+
+        // Establish a connection to Nakama server
+        Client.m_Connection = new Nakama.Client("http", ip, port, "defaultkey");
+        Client.m_Connection.Timeout = 1;
+        if (Client.m_Connection == null)
+        {
+            Log.Error("Failed to create connection");
+            return await Task.FromResult<ISession>(null!);
+        }
+
+        Discord.SetPresence(Discord.EDiscordState.Connecting);
+
+        try
+        {
+            Client.m_Session = await Client.m_Connection.AuthenticateDeviceAsync(Client.m_DeviceID, Client.m_DeviceID);
+            Log.Verbose("Successfully authenticated");
+            Log.General("Your ID: {0}", Client.m_Session.UserId);
+        }
+        catch (Exception)
+        {
+            return await Task.FromResult<ISession>(null!);
+        }
+
+        Client.m_Socket = Socket.From(Client.m_Connection);
+        await Client.m_Socket.ConnectAsync(Client.m_Session);
+
+        Client.m_Socket.ReceivedMatchState += OnMatchState;
+        Client.m_Socket.ReceivedMatchPresence += OnMatchPresence;
+
+        IApiRpc response = await Client.m_Connection.RpcAsync(Client.m_Session, "rpc_get_matches");
+        JsonConvert.DeserializeObject<Server>(response.Payload.Substring(1, response.Payload.Length - 2));
+
+        IMatch match = await Client.m_Socket.JoinMatchAsync(Server.MatchID);
+        Log.Verbose("Successfully connected to match {0}", Server.MatchID!);
+        Client.m_Connected = true;
+
+        foreach (IUserPresence client in match.Presences)
+        {
+            Log.General("{0} already in the game", client.UserId);
+            Match.CreatePresence(client);
+            Client.m_ModelsToLoad.Add(client.UserId);
+        }
+
+        Client.OnClientLoad();
+
+        return Client.m_Session;
+    }
+
+    public static void OnMatchState(IMatchState newState)
+    {
+        switch (newState.OpCode)
+        {
+            case (Int64)OPCODE.PLAYER_MOVE:
+                List<string> playerMoveData = System.Text.Encoding.Default.GetString(newState.State).Split(',').ToList();
+
+                float x = float.Parse(playerMoveData[1], CultureInfo.InvariantCulture.NumberFormat);
+                float y = float.Parse(playerMoveData[2], CultureInfo.InvariantCulture.NumberFormat);
+                float z = float.Parse(playerMoveData[3], CultureInfo.InvariantCulture.NumberFormat);
+                float rx = float.Parse(playerMoveData[4], CultureInfo.InvariantCulture.NumberFormat);
+                float ry = float.Parse(playerMoveData[5], CultureInfo.InvariantCulture.NumberFormat);
+                float rz = float.Parse(playerMoveData[6], CultureInfo.InvariantCulture.NumberFormat);
+                float rw = float.Parse(playerMoveData[7], CultureInfo.InvariantCulture.NumberFormat);
+
+                Body.SetTransform((uint)m_Clients[playerMoveData[0]].PlayerModel!.Body, new Transform(new Vector3(x, y, z), new Quaternion(rx, ry, rz, rw)));
+                break;
+
+            // OPCODE.PLAYER_SPAWN gets called when a player joins the game, the server send a message directly to them to spawn at a specific spawn point
+            case (Int64)OPCODE.PLAYER_SPAWN: 
+                if (Game.GetState() != EGameState.Playing)
+                    break;
+
+                List<string> playerSpawnData = System.Text.Encoding.Default.GetString(newState.State).Split(',').ToList();
+
+                float spawnX = float.Parse(playerSpawnData[0], CultureInfo.InvariantCulture.NumberFormat);
+                float spawnY = float.Parse(playerSpawnData[1], CultureInfo.InvariantCulture.NumberFormat);
+                float spawnZ = float.Parse(playerSpawnData[2], CultureInfo.InvariantCulture.NumberFormat);
+
+                Player.SetPosition(new Vector3(spawnX, spawnY, spawnZ));
+                break;
+            case (Int64)OPCODE.PLAYER_SHOOTS:
+                break;
+            default:
+                break;
+        }
+    }
+
+
+    public static void OnMatchPresence(IMatchPresenceEvent presence)
+    {
+        if (presence.Joins.Any())
+        {
+            foreach (IUserPresence? client in presence.Joins)
+            {
+                if (client.UserId == Client.m_Session!.UserId)
+                    continue;
+
+                Log.General("Player {0} is joining the match!", client.UserId);
+                CreatePresence(client);
+                Client.m_ModelsToLoad.Add(client.UserId);
+            }
+        }
+        else if (presence.Leaves.Any())
+        {
+            foreach (IUserPresence? client in presence.Leaves)
+            {
+                if (client.UserId == Client.m_Session!.UserId)
+                    continue;
+
+                if (m_Clients[client.UserId].PlayerModel!.Body != null)
+                {
+                    Log.General("Destroying body for {0}", client.UserId);
+                    Body.Destroy((uint)m_Clients[client.UserId].PlayerModel!.Body);
+                }
+
+                m_Clients.Remove(client.UserId);
+
+                Log.General("Player {0} has left the match!", client.UserId);
+            }
+        }
+    }
+
+    public static async void Disconnect()
+    {
+        if (Client.m_Socket == null || Server.MatchID != null)
+            return;
+        
+        await Client.m_Socket.LeaveMatchAsync(Server.MatchID);
+        await Client.m_Socket.CloseAsync();
+
+        Server.MatchID = null;
+
+        Client.m_Socket = null;
+        Client.m_Session = null;
+        Client.m_Connected = false;
+
+        Match.m_Clients = new() { };
+        Game.SetState(EGameState.Menu);
+
+        Log.General("Disconnected from server");
+    }
+}
