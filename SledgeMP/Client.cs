@@ -10,6 +10,7 @@ using System.Text;
 using Newtonsoft.Json;
 
 using Nakama;
+using System.Globalization;
 
 public class Model {
     public uint Body = 0;
@@ -151,20 +152,31 @@ public static class Client {
         if (!m_Connected || Game.GetState() != EGameState.Playing)
             return;
 
-        if (!m_ModelsToLoad.Any())
-            return;
-
-        foreach (var userId in m_ModelsToLoad.ToList())
+        if (m_ModelsToLoad.Any())
         {
-            // If it's not the local player, load in their vox player model
-            if (userId != m_Session.UserId)
+            foreach (var userId in m_ModelsToLoad.ToList())
             {
-                SpawnPlayer(userId);
-                m_ModelsToLoad.Remove(userId);
+                // If it's not the local player, load in their vox player model
+                if (userId != m_Session.UserId)
+                {
+                    SpawnPlayer(userId);
+                    m_ModelsToLoad.Remove(userId);
 
-                Log.General("Loaded {0}'s model into the game", userId);
+                    Log.General("Loaded {0}'s model into the game", userId);
+                }
             }
         }
+
+        if (m_Socket == null || m_Session == null || Server.MatchID == null)
+            return;
+
+        Vector2 playerInput = Player.GetPlayerMovementInput();
+        Transform playerTransform = Player.GetCameraTransform();
+
+        var posData = playerTransform.Position.X.ToString() + "," + playerTransform.Position.Y.ToString() + "," + playerTransform.Position.Z.ToString();
+
+        // Every local game tick, send client's position data to Nakama
+        m_Socket.SendMatchStateAsync(Server.MatchID, (long)OPCODE.PLAYER_MOVE, posData);
     }
 
     // Presence means another player / client that is NOT the local player.
@@ -232,17 +244,25 @@ public static class Client {
         Rest of the clients recieve that and say, "Hey, I'll spawn you in and send you a PLAYER_SPAWN"
     */
 
-    public static void OnMatchState(IMatchState state) {
-        switch (state.OpCode) {
+    public static void OnMatchState(IMatchState newState) {
+        switch (newState.OpCode) {
             case (Int64)OPCODE.PLAYER_MOVE:
-                Log.General("Received player transform");
+                // Date structure: user_id,x,y,z    
+                var playerMoveData = System.Text.Encoding.Default.GetString(newState.State).Split(',').ToList();
+
+                float x = float.Parse(playerMoveData[1], CultureInfo.InvariantCulture.NumberFormat);
+                float y = float.Parse(playerMoveData[2], CultureInfo.InvariantCulture.NumberFormat);
+                float z = float.Parse(playerMoveData[3], CultureInfo.InvariantCulture.NumberFormat);
+
+                Body.SetPosition(m_Clients[playerMoveData[0]].Model.Body, new Vector3(x, y, z));
+                Body.SetTransform(m_Clients[playerMoveData[0]].Model.Body, new Transform(new Vector3(x, y, z), new Quaternion(0, 0, 0, 1)));
                 break;
             case (Int64)OPCODE.PLAYER_SPAWN:
                 // This message could be received in the menu (while connecting and not in game yet)
                 if (!Game.IsPlaying())
                     break;
 
-                string id = System.Text.Encoding.Default.GetString(state.State);
+                string id = System.Text.Encoding.Default.GetString(newState.State);
                 if (id == m_Session!.UserId)
                     return;
 
