@@ -28,7 +28,7 @@ public static class Discord {
 
         Presences.Add(EDiscordState.Connected, new RichPresence {
             Details = $"Playing {Server.Gamemode} on {Server.Map}",
-            State = $"Playing with {Server.Clients} others",
+            State = $"Playing with 0 <- TODO: update me others",
             Party = new Party() {
                 ID = Secrets.CreateFriendlySecret(rand),
                 Privacy = Party.PrivacySetting.Public

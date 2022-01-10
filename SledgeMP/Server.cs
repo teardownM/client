@@ -22,5 +22,4 @@ public class Server {
 
     public static string Gamemode = "Sandbox";
     public static string Map = "Villa Gordon";
-    public static uint Clients = 1;
 }

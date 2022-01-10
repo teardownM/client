@@ -9,7 +9,7 @@ using DiscordRPC;
 /* Main things go here such as callbacks */
 
 public class SledgeMP {
-    // private static string m_IP = "159.89.18.92";
+    //private static string m_IP = "159.89.18.92";
     private static string m_IP = "127.0.0.1";
     private static ushort m_Port = 7350;
 
@@ -88,7 +88,7 @@ public class SledgeMP {
             if (connection == null) {
                 Log.General("Failed connecting to server: {0}:{1}", m_IP, m_Port);
             } else {
-                Log.General("Connecting to server: {0}:{1}", m_IP, m_Port);
+                Log.General("Connected to server: {0}:{1}", m_IP, m_Port);
             }
         });
 

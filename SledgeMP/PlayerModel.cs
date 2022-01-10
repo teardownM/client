@@ -1,8 +1,9 @@
 using SledgeLib;
 using System.Numerics;
 
-public class Model {
+public class PlayerModel {
     public uint? Body = null;
+
     public uint? sBody = null;
     public uint? sLeftArm = null;
     public uint? sRightArm = null;
@@ -22,6 +23,7 @@ public class Model {
         return Math.Atan2(2.0*(q.X*q.Z + q.W*q.Y), q.W*q.W - q.X*q.X - q.Y*q.Y + q.Z*q.Z);
     }
 
+    /*
     public Model(Vector3 pos) {
         Body = SledgeLib.Body.Create();
         sBody = Shape.Create(Body.Value);
@@ -33,17 +35,23 @@ public class Model {
 
         SledgeLib.Body.SetDynamic(Body.Value, false);
     }
-
+    */
     public void Load() {
         if (Body == null || sBody == null || sHead == null || sLeftArm == null || sRightArm == null || sLeftLeg == null || sRightLeg == null)
             return;
 
-        Shape.LoadVox(sBody.Value, "Assets/Models/Player.vox", "body", 1f);
-        Shape.LoadVox(sHead.Value, "Assets/Models/Player.vox", "head", 1f);
-        Shape.LoadVox(sLeftArm.Value, "Assets/Models/Player.vox", "arm_left", 1f);
-        Shape.LoadVox(sRightArm.Value, "Assets/Models/Player.vox", "arm_right", 1f);
-        Shape.LoadVox(sLeftLeg.Value, "Assets/Models/Player.vox", "leg_left", 1f);
-        Shape.LoadVox(sRightLeg.Value, "Assets/Models/Player.vox", "leg_right", 1f);
+     //    Shape.LoadVox(m_Clients[clientID].Model.sBody, "Assets/Models/Player.vox", "", 1.0f);
+
+        //Shape.LoadVox(sBody.Value, "Assets/Models/Player.vox", "body", 1f);
+        //Shape.LoadVox(sHead.Value, "Assets/Models/Player.vox", "head", 1f);
+        //Shape.LoadVox(sLeftArm.Value, "Assets/Models/Player.vox", "arm_left", 1f);
+        //Shape.LoadVox(sRightArm.Value, "Assets/Models/Player.vox", "arm_right", 1f);
+        //Shape.LoadVox(sLeftLeg.Value, "Assets/Models/Player.vox", "leg_left", 1f);
+        //Shape.LoadVox(sRightLeg.Value, "Assets/Models/Player.vox", "leg_right", 1f);
+
+        Log.General("Loaded all player voxes");
+
+        SledgeLib.Body.SetTransform((uint)Body, new Transform(new Vector3(50, 10, 10), new Quaternion(0, 0, 0, 1)));
     }
 
     public void Update(Vector3 startPos, Vector3 endPos, float t, Quaternion rot) {
