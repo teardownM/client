@@ -294,7 +294,7 @@ public static class Client {
 
                 m_Clients.Remove(client.UserId);
 
-                if (m_Clients.ContainsKey(client.UserId))
+                if (m_Clients.ContainsKey(client.UserId) && !m_ModelsToLoad.Contains(client.UserId))
                     Body.Destroy(m_Clients[client.UserId].Model.Body);
 
                 if (m_ModelsToLoad.Contains(client.UserId))
