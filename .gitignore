@@ -3,5 +3,6 @@ Lib/bin/*
 Lib/obj/*
 SledgeMP/bin/*
 SledgeMP/obj/*
+modules
 
 .cookie
