@@ -19,7 +19,7 @@ public static class Discord {
         }});
 
         Presences.Add(EDiscordState.Connected, new RichPresence {
-            State = "Playing (server_name) with x people",
+            State = $"Playing {Server.Name} with {Server.Clients} people",
             Timestamps = new Timestamps() {
             Start = DateTime.UtcNow
         }});
