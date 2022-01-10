@@ -152,13 +152,10 @@ public static class Client {
         if (!m_Connected || Game.GetState() != EGameState.Playing)
             return;
 
-        if (m_ModelsToLoad.Any())
-        {
-            foreach (var userId in m_ModelsToLoad.ToList())
-            {
+        if (m_ModelsToLoad.Any()) {
+            foreach (var userId in m_ModelsToLoad.ToList()) {
                 // If it's not the local player, load in their vox player model
-                if (userId != m_Session.UserId)
-                {
+                if (userId != m_Session!.UserId) {
                     SpawnPlayer(userId);
                     m_ModelsToLoad.Remove(userId);
 
@@ -226,12 +223,11 @@ public static class Client {
                 // 4. Player loads into the map
                 // 5. EGameState changes to playing
                 // 6. Spawn players in m_ModelsToLoad
-                if (Server.MatchID != null) // <-- Checking for Server.MatchID is the same as checking if m_Connected is true
-                {
+                if (Server.MatchID != null) { // <-- Checking for Server.MatchID is the same as checking if m_Connected is true
                     Log.Verbose("Local client has loaded into the map.");
 
                     // 7. Notify every player local client has loaded in and should spawn their model
-                    m_Socket.SendMatchStateAsync(Server.MatchID, (long)OPCODE.PLAYER_SPAWN, "");
+                    m_Socket!.SendMatchStateAsync(Server.MatchID, (long)OPCODE.PLAYER_SPAWN, "");
                 }
                 break;
             default:
