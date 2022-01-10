@@ -89,8 +89,7 @@ public static class Client {
             return await Task.FromResult<ISession>(null!);
         }
 
-        try
-        {
+        try {
             m_Session = await m_Connection.AuthenticateDeviceAsync(m_DeviceID, m_DeviceID);
             Log.Verbose("Successfully authenticated");
             Log.General("Your ID: {0}", m_Session.UserId);
@@ -149,13 +148,13 @@ public static class Client {
             return;
 
         if (m_ModelsToLoad.Any()) {
-            foreach (var userId in m_ModelsToLoad.ToList()) {
+            foreach (var userID in m_ModelsToLoad.ToList()) {
                 // If it's not the local player, load in their vox player model
-                if (userId != m_Session!.UserId) {
-                    SpawnPlayer(userId);
-                    m_ModelsToLoad.Remove(userId);
+                if (userID != m_Session!.UserId) {
+                    SpawnPlayer(userID);
+                    m_ModelsToLoad.Remove(userID);
 
-                    Log.General("Loaded {0}'s model into the game", userId);
+                    Log.General("Loaded {0}'s model into the game", userID);
                 }
             }
         }
@@ -200,7 +199,8 @@ public static class Client {
         Body.SetTransform(m_Clients[clientID].Model.Body, new Transform(new Vector3(50, 10, 10), new Quaternion(0, 0, 0, 1)));
         m_Clients[clientID].Spawned = true;
 
-        Log.General("{0} has spawned", clientID);
+        CSteamID steamID = new CSteamID(ulong.Parse(clientID));
+        Log.General("{0} has spawned", SteamFriends.GetFriendPersonaName(steamID));
     }
 
     public static void OnStateChange(uint iState) {
