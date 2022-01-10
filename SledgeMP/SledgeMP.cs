@@ -26,7 +26,7 @@ public class SledgeMP {
 
     private static bool m_bSteamInitialized = false;
 
-    private static dBindCallback fDisconnectCallback = new dBindCallback(Client.Disconnect);
+    private static dBindCallback fDisconnectCallback = new dBindCallback(Match.Disconnect);
     private static dUIntCallback fStateChange = new dUIntCallback((uint iState) => {
         Client.OnStateChange(iState);
     });
@@ -84,7 +84,7 @@ public class SledgeMP {
 
         DisconnectGameBind = new CBind(EKeyCode.VK_B, fDisconnectCallback);
         ConnectGameBind = new CBind(EKeyCode.VK_K, async () => {
-            ISession connection = await Client.Connect(m_IP, m_Port);
+            ISession connection = await Match.Connect(m_IP, m_Port);
             if (connection == null) {
                 Log.General("Failed connecting to server: {0}:{1}", m_IP, m_Port);
             } else {
