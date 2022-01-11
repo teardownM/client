@@ -65,18 +65,16 @@ public static class Client
     }
 
     public static void SpawnPlayer(string clientID) {
-        Shape.LoadVox((uint)Match.m_Clients[clientID].PlayerModel.sBody, "Assets/Models/Player.vox", "", 1.0f);
-        Body.SetTransform((uint)Match.m_Clients[clientID].PlayerModel.Body, new Transform(new Vector3(50, 10, 10), new Quaternion(0, 0.7071068f, 0.7071068f, 0)));
+        Match.m_Clients[clientID].PlayerModel = new PlayerModel();
+        Match.m_Clients[clientID].PlayerModel!.Load();
 
         Match.m_Clients[clientID].Spawned = true;
 
         Log.General("{0} has spawned", clientID);
     }
 
-    public static void OnStateChange(uint iState)
-    {
-        switch (iState)
-        {
+    public static void OnStateChange(uint iState) {
+        switch (iState) {
             case (uint)EGameState.Menu:
                 if (Server.MatchID != null)
                     Match.Disconnect();
@@ -88,10 +86,9 @@ public static class Client
                 // 4. Player loads into the map
                 // 5. EGameState changes to playing
                 // 6. Spawn players in m_ModelsToLoad
-                if (Server.MatchID != null)
-                { // <-- Checking for Server.MatchID is the same as checking if m_Connected is true
+                if (Server.MatchID != null) { // <-- Checking for Server.MatchID is the same as checking if m_Connected is true
                     m_Connected = true;
-                    Log.Verbose("Local client has loaded into the map.");
+                    Log.General("Connected to server");
 
                     // 7. Notify every player local client has loaded in and should spawn their model
                     m_Socket!.SendMatchStateAsync(Server.MatchID, (long)Match.OPCODE.PLAYER_SPAWN, "");
