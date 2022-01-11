@@ -17,8 +17,7 @@ public class IClientData {
     public Transform Transform = new Transform();
 }
 
-public static class Client
-{
+public static class Client {
     public static string? m_DeviceID = Guid.NewGuid().ToString();
     public static List<string> m_ModelsToLoad = new();
 
