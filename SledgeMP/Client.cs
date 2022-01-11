@@ -50,8 +50,8 @@ public static class Client {
         if (m_Socket == null || m_Session == null || Server.MatchID == null)
             return;
 
-        Vector3 playerPos = Player.GetPosition();
-        Quaternion camRot = Player.GetCameraTransform().Rotation;
+        Vector3 playerPos = CPlayer.m_Position; //Player.GetPosition();
+        Quaternion camRot = CPlayer.m_CameraAngles.Rotation;
 
         var posData = playerPos.X.ToString() + "," + playerPos.Y.ToString() + "," + playerPos.Z.ToString()
             + "," + camRot.X.ToString() + "," + camRot.Y.ToString() + "," + camRot.Z.ToString() + "," + camRot.W.ToString();
