@@ -31,7 +31,7 @@ public static class Client {
     }
 
     public static void Tick() {
-        if (!m_Connected) {
+        if (!m_Connected || Match.m_Clients.Count <= 0) {
             return;
         }
 
