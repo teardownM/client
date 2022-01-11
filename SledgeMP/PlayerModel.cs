@@ -23,8 +23,7 @@ public class PlayerModel {
         return Math.Atan2(2.0*(q.X*q.Z + q.W*q.Y), q.W*q.W - q.X*q.X - q.Y*q.Y + q.Z*q.Z);
     }
 
-    /*
-    public Model(Vector3 pos) {
+    public PlayerModel() {
         Body = SledgeLib.Body.Create();
         sBody = Shape.Create(Body.Value);
         sHead = Shape.Create(Body.Value);
@@ -35,19 +34,17 @@ public class PlayerModel {
 
         SledgeLib.Body.SetDynamic(Body.Value, false);
     }
-    */
+
     public void Load() {
         if (Body == null || sBody == null || sHead == null || sLeftArm == null || sRightArm == null || sLeftLeg == null || sRightLeg == null)
             return;
 
-     //    Shape.LoadVox(m_Clients[clientID].Model.sBody, "Assets/Models/Player.vox", "", 1.0f);
-
-        //Shape.LoadVox(sBody.Value, "Assets/Models/Player.vox", "body", 1f);
-        //Shape.LoadVox(sHead.Value, "Assets/Models/Player.vox", "head", 1f);
-        //Shape.LoadVox(sLeftArm.Value, "Assets/Models/Player.vox", "arm_left", 1f);
-        //Shape.LoadVox(sRightArm.Value, "Assets/Models/Player.vox", "arm_right", 1f);
-        //Shape.LoadVox(sLeftLeg.Value, "Assets/Models/Player.vox", "leg_left", 1f);
-        //Shape.LoadVox(sRightLeg.Value, "Assets/Models/Player.vox", "leg_right", 1f);
+        Shape.LoadVox(sBody.Value, "Assets/Models/Player.vox", "body", 1f);
+        Shape.LoadVox(sHead.Value, "Assets/Models/Player.vox", "head", 1f);
+        Shape.LoadVox(sLeftArm.Value, "Assets/Models/Player.vox", "arm_left", 1f);
+        Shape.LoadVox(sRightArm.Value, "Assets/Models/Player.vox", "arm_right", 1f);
+        Shape.LoadVox(sLeftLeg.Value, "Assets/Models/Player.vox", "leg_left", 1f);
+        Shape.LoadVox(sRightLeg.Value, "Assets/Models/Player.vox", "leg_right", 1f);
 
         Log.General("Loaded all player voxes");
 
@@ -70,8 +67,7 @@ public class PlayerModel {
     }
 
     public void Remove() {
-        if (Body != null) {
+        if (Body != null)
             SledgeLib.Body.Destroy(Body.Value);
-        }
     }
 }
