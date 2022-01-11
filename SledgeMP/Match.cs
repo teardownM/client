@@ -90,13 +90,11 @@ public static class Match {
                 float ry = float.Parse(playerMoveData[5], CultureInfo.InvariantCulture.NumberFormat);
                 float rz = float.Parse(playerMoveData[6], CultureInfo.InvariantCulture.NumberFormat);
                 float rw = float.Parse(playerMoveData[7], CultureInfo.InvariantCulture.NumberFormat);
-
-
-                
+                                
                 Vector3 startPos = m_Clients[playerMoveData[0]].PlayerModel!.Body!.m_Position;
                 Vector3 endPos = new Vector3(x, y, z);
 
-                m_Clients[playerMoveData[0]].PlayerModel!.Update(startPos, endPos, 1.0f, new Quaternion(rx, ry, rz, rw));
+                m_Clients[playerMoveData[0]].PlayerModel!.Update(startPos, endPos, new Quaternion(rx, ry, rz, rw));
                 break;
 
             // OPCODE.PLAYER_SPAWN gets called when a player joins the game, the server send a message directly to them to spawn at a specific spawn point
@@ -143,6 +141,7 @@ public static class Match {
                 if (m_Clients[client.UserId].PlayerModel!.Body != null) {
                     Log.General("Destroying body for {0}", client.UserId);
                     Log.General("METHOD NOT IMPLEMENTED");
+
 
                     //Body.Destroy(m_Clients[client.UserId].PlayerModel!.Body!.Value);
                 }

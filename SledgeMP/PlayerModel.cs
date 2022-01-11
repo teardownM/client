@@ -83,7 +83,7 @@ public class PlayerModel {
         //Body.m_Rotation = Quaternion.CreateFromYawPitchRoll((float)GetPitch(camRot), 0, 0);
     }
 
-    public void Update(Vector3 startPos, Vector3 endPos, float t, Quaternion rot) {
+    public void Update(Vector3 startPos, Vector3 endPos, Quaternion rot) {
         Body!.m_Position = Vector3.Lerp(startPos, endPos, 1);
 
         sBody!.m_LocalTransform = new Transform(new Vector3(0.3f, 0.7f, 0.1f), new Quaternion(0, 0.7071068f, 0.7071068f, 0));
@@ -93,9 +93,7 @@ public class PlayerModel {
         sLeftLeg!.m_LocalTransform = new Transform(new Vector3(0, 0, 0), new Quaternion(0, 0.7071068f, 0.7071068f, 0));
         sRightLeg!.m_LocalTransform = new Transform(new Vector3(0.3f, 0, 0), new Quaternion(0, 0.7071068f, 0.7071068f, 0));
 
-        Quaternion camRot = CPlayer.m_CameraTransform.Rotation;
-
-        Body.m_Rotation = Quaternion.CreateFromYawPitchRoll((float)GetPitch(camRot), 0, 0);
+        Body.m_Rotation = Quaternion.CreateFromYawPitchRoll((float)GetPitch(rot), 0, 0);
     }
 
     public void Remove() {
