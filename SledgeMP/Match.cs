@@ -111,6 +111,9 @@ public static class Match {
                 Player.SetPosition(new Vector3(spawnX, spawnY, spawnZ));
                 break;
             case (Int64)OPCODE.PLAYER_SHOOTS:
+                List<string> shootData = System.Text.Encoding.Default.GetString(newState.State).Split(',').ToList();
+                Vector3 pos = Body.GetPosition(m_Clients[shootData[0]].PlayerModel!.Body!.Value);
+                // Log.General("Shooting with the {0} from position {1}", shootData[1], pos.ToString());
                 break;
             default:
                 break;
