@@ -33,6 +33,7 @@ public class PlayerModel {
         sRightLeg = Shape.Create(Body.Value);
 
         SledgeLib.Body.SetDynamic(Body.Value, false);
+        Tags.SetTag(Body.Value, "unbreakable", "");
     }
 
     public void Load() {
