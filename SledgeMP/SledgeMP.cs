@@ -88,7 +88,7 @@ public class SledgeMP {
             if (connection == null) {
                 Log.General("Failed connecting to server: {0}:{1}", m_IP, m_Port);
             } else {
-                Log.General("Connected to server: {0}:{1}", m_IP, m_Port);
+                Log.General("Connecting to server: {0}:{1}", m_IP, m_Port);
             }
         });
 
