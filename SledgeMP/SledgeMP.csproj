@@ -9,7 +9,7 @@
     </PropertyGroup>
     
     <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-        <Exec Command="xcopy $(ProjectDir)$(OutDir)SledgeMP.dll ..\..\mods\SledgeMP /y" />
+        <Exec Command="xcopy $(ProjectDir)$(OutDir)SledgeMP.dll $(sledgeDir)\mods\SledgeMP /y" />
     </Target>
     <ItemGroup>
         <Reference Include="SledgeLib">
