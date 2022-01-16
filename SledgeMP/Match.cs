@@ -90,11 +90,11 @@ public static class Match {
                 float ry = float.Parse(playerMoveData[5], CultureInfo.InvariantCulture.NumberFormat);
                 float rz = float.Parse(playerMoveData[6], CultureInfo.InvariantCulture.NumberFormat);
                 float rw = float.Parse(playerMoveData[7], CultureInfo.InvariantCulture.NumberFormat);
-
-                Vector3 startPos = Body.GetPosition(m_Clients[playerMoveData[0]].PlayerModel!.Body!.Value);
+                                
+                Vector3 startPos = m_Clients[playerMoveData[0]].PlayerModel!.Body!.m_Position;
                 Vector3 endPos = new Vector3(x, y, z);
 
-                m_Clients[playerMoveData[0]].PlayerModel!.Update(startPos, endPos, 1.0f, new Quaternion(rx, ry, rz, rw));
+                m_Clients[playerMoveData[0]].PlayerModel!.Update(startPos, endPos, new Quaternion(rx, ry, rz, rw));
                 break;
 
             // OPCODE.PLAYER_SPAWN gets called when a player joins the game, the server send a message directly to them to spawn at a specific spawn point
@@ -108,11 +108,12 @@ public static class Match {
                 float spawnY = float.Parse(playerSpawnData[1], CultureInfo.InvariantCulture.NumberFormat);
                 float spawnZ = float.Parse(playerSpawnData[2], CultureInfo.InvariantCulture.NumberFormat);
 
-                Player.SetPosition(new Vector3(spawnX, spawnY, spawnZ));
+                CPlayer.m_Position = new Vector3(spawnX, spawnY, spawnZ);
                 break;
             case (Int64)OPCODE.PLAYER_SHOOTS:
                 List<string> shootData = System.Text.Encoding.Default.GetString(newState.State).Split(',').ToList();
-                Vector3 pos = Body.GetPosition(m_Clients[shootData[0]].PlayerModel!.Body!.Value);
+
+                //Vector3 pos = Body.GetPosition(m_Clients[shootData[0]].PlayerModel!.Body!.Value);
                 // Log.General("Shooting with the {0} from position {1}", shootData[1], pos.ToString());
                 break;
             default:
@@ -139,7 +140,10 @@ public static class Match {
 
                 if (m_Clients[client.UserId].PlayerModel!.Body != null) {
                     Log.General("Destroying body for {0}", client.UserId);
-                    Body.Destroy(m_Clients[client.UserId].PlayerModel!.Body!.Value);
+                    Log.General("METHOD NOT IMPLEMENTED");
+
+
+                    //Body.Destroy(m_Clients[client.UserId].PlayerModel!.Body!.Value);
                 }
 
                 m_Clients.Remove(client.UserId);

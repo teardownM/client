@@ -50,11 +50,11 @@ public static class Client {
         if (m_Socket == null || m_Session == null || Server.MatchID == null)
             return;
 
-        Vector3 playerPos = Player.GetPosition();
-        Quaternion camRot = Player.GetCameraTransform().Rotation;
+        Vector3 playerPos = CPlayer.m_Position;
+        Quaternion camRotation = CPlayer.m_CameraTransform.Rotation;
 
         var posData = playerPos.X.ToString() + "," + playerPos.Y.ToString() + "," + playerPos.Z.ToString()
-            + "," + camRot.X.ToString() + "," + camRot.Y.ToString() + "," + camRot.Z.ToString() + "," + camRot.W.ToString();
+            + "," + camRotation.X.ToString() + "," + camRotation.Y.ToString() + "," + camRotation.Z.ToString() + "," + camRotation.W.ToString();
 
         // Every local game tick, send client's position data to Nakama
         m_Socket.SendMatchStateAsync(Server.MatchID, (long)Match.OPCODE.PLAYER_MOVE, posData);
