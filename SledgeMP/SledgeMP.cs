@@ -4,8 +4,6 @@ using SledgeLib;
 using Steamworks;
 using Nakama;
 
-using DiscordRPC;
-
 /* Main things go here such as callbacks */
 
 public class SledgeMP {
