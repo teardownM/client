@@ -33,8 +33,7 @@ public class PlayerModel {
         sRightLeg = new CShape(Body);
 
         Tags.SetTag(Body.m_Handle, "unbreakable", "");
-        // No function
-        //SledgeLib.Body.SetDynamic(Body.Value, false);
+        Body.m_Dynamic = true;
     }
 
     public void Load() {
