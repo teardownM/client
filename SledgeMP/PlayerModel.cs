@@ -82,7 +82,6 @@ public class PlayerModel {
 
     public void Remove() {
         if (Body != null)
-            Log.Verbose("Remove body - Method not implemented");
             Body!.Destroy();
     }
 }
