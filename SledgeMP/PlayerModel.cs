@@ -95,7 +95,7 @@ public class PlayerModel {
 
     public void Remove() {
         if (Body != null)
-            Log.General("Remove body - Method not implemented");
-            //SledgeLib.Body.Destroy(Body.Value);
+            Log.Verbose("Remove body - Method not implemented");
+            Body!.Destroy();
     }
 }

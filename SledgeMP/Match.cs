@@ -140,10 +140,8 @@ public static class Match {
 
                 if (m_Clients[client.UserId].PlayerModel!.Body != null) {
                     Log.General("Destroying body for {0}", client.UserId);
-                    Log.General("METHOD NOT IMPLEMENTED");
 
-
-                    //Body.Destroy(m_Clients[client.UserId].PlayerModel!.Body!.Value);
+                    m_Clients[client.UserId].PlayerModel!.Body!.Destroy();
                 }
 
                 m_Clients.Remove(client.UserId);
