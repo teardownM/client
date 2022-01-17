@@ -33,7 +33,6 @@ public class PlayerModel {
         sRightLeg = new CShape(Body);
 
         Tags.SetTag(Body.m_Handle, "unbreakable", "");
-        Body.m_Dynamic = true;
     }
 
     public void Load() {
@@ -49,47 +48,36 @@ public class PlayerModel {
 
         Log.General("Loaded all player voxes");
 
-//        SledgeLib.Body.SetTransform((uint)Body, new Transform(new Vector3(50, 10, 10), new Quaternion(0, 0.7071068f, 0.7071068f, 0)));
-
-        // if (Tags.HasTag(sBody.Value, "nocull")) {
-        //     Tags.RemoveTag(sBody.Value, "nocull");
-        //     Log.General("Removed nocull tag from player vox");
-        // }
+        sBody.m_LocalTransform = new Transform(new Vector3(0.3f, 0.7f, 0.1f), new Quaternion(0, 0.7071068f, 0.7071068f, 0));
+        sHead.m_LocalTransform = new Transform(new Vector3(0.3f, 1.4f, 0), new Quaternion(0, 0.7071068f, 0.7071068f, 0));
+        sLeftArm.m_LocalTransform = new Transform(new Vector3(-0.2f, 0.7f, 0.1f), new Quaternion(0, 0.7071068f, 0.7071068f, 0));
+        sRightArm.m_LocalTransform = new Transform(new Vector3(0.4f, 0.7f, 0.1f), new Quaternion(0, 0.7071068f, 0.7071068f, 0));
+        sLeftLeg.m_LocalTransform = new Transform(new Vector3(0, 0, 0), new Quaternion(0, 0.7071068f, 0.7071068f, 0));
+        sRightLeg.m_LocalTransform = new Transform(new Vector3(0.3f, 0, 0), new Quaternion(0, 0.7071068f, 0.7071068f, 0));
 
         Tags.SetTag(sBody.m_Handle, "nocull", "");
+        Tags.SetTag(sHead.m_Handle, "nocull", "");
+        Tags.SetTag(sLeftArm.m_Handle, "nocull", "");
+        Tags.SetTag(sRightArm.m_Handle, "nocull", "");
+        Tags.SetTag(sLeftLeg.m_Handle, "nocull", "");
+        Tags.SetTag(sRightLeg.m_Handle, "nocull", "");
+
+        Body.m_Dynamic = true;
     }
 
-    public void Update(Vector3 startPos, Vector3 endPos, float t, Quaternion playerRotation) {
-        Body!.m_Position = Vector3.Lerp(startPos, endPos, 1);
+    public void Update(Vector3 startPos, Vector3 endPos, Quaternion playerRotation) {
+        Body!.m_Velocity = new Vector3(0, 0, 0);
+        Body!.m_AngularVelocity = new Vector3(0, 0, 0);
 
-        sBody!.m_LocalTransform = new Transform(new Vector3(0.3f, 0.7f, 0.1f), new Quaternion(0, 0.7071068f, 0.7071068f, 0));
-        sHead!.m_LocalTransform = new Transform(new Vector3(0.3f, 1.4f, 0), new Quaternion(0, 0.7071068f, 0.7071068f, 0));
-        sLeftArm!.m_LocalTransform = new Transform(new Vector3(-0.2f, 0.7f, 0.1f), new Quaternion(0, 0.7071068f, 0.7071068f, 0));
-        sRightArm!.m_LocalTransform = new Transform(new Vector3(0.4f, 0.7f, 0.1f), new Quaternion(0, 0.7071068f, 0.7071068f, 0));
-        sLeftLeg!.m_LocalTransform = new Transform(new Vector3(0, 0, 0), new Quaternion(0, 0.7071068f, 0.7071068f, 0));
-        sRightLeg!.m_LocalTransform = new Transform(new Vector3(0.3f, 0, 0), new Quaternion(0, 0.7071068f, 0.7071068f, 0));
+        if (!Body!.m_Position.Equals(endPos))
+        {
+            Body!.m_Position = endPos;
+        } 
 
-        Tags.SetTag(sBody.m_Handle, "nocull", "");
-        Tags.SetTag(sBody.m_Handle, "nocull", "");
-        Tags.SetTag(sBody.m_Handle, "nocull", "");
-        Tags.SetTag(sBody.m_Handle, "nocull", "");
-        Tags.SetTag(sBody.m_Handle, "nocull", "");
-        Tags.SetTag(sBody.m_Handle, "nocull", "");
-
-        Body.m_Rotation = playerRotation;
-    }
-
-    public void Update(Vector3 startPos, Vector3 endPos, Quaternion rot) {
-        Body!.m_Position = Vector3.Lerp(startPos, endPos, 1);
-
-        sBody!.m_LocalTransform = new Transform(new Vector3(0.3f, 0.7f, 0.1f), new Quaternion(0, 0.7071068f, 0.7071068f, 0));
-        sHead!.m_LocalTransform = new Transform(new Vector3(0.3f, 1.4f, 0), new Quaternion(0, 0.7071068f, 0.7071068f, 0));
-        sLeftArm!.m_LocalTransform = new Transform(new Vector3(-0.2f, 0.7f, 0.1f), new Quaternion(0, 0.7071068f, 0.7071068f, 0));
-        sRightArm!.m_LocalTransform = new Transform(new Vector3(0.4f, 0.7f, 0.1f), new Quaternion(0, 0.7071068f, 0.7071068f, 0));
-        sLeftLeg!.m_LocalTransform = new Transform(new Vector3(0, 0, 0), new Quaternion(0, 0.7071068f, 0.7071068f, 0));
-        sRightLeg!.m_LocalTransform = new Transform(new Vector3(0.3f, 0, 0), new Quaternion(0, 0.7071068f, 0.7071068f, 0));
-
-        Body.m_Rotation = Quaternion.CreateFromYawPitchRoll((float)GetPitch(rot), 0, 0);
+        if (!Body!.m_Rotation.Equals(playerRotation))
+        {
+            Body.m_Rotation = playerRotation;
+        }
     }
 
     public void Remove() {

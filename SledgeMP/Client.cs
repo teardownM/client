@@ -53,8 +53,8 @@ public static class Client {
         Vector3 playerPos = CPlayer.m_Position;
         Quaternion camRotation = CPlayer.m_CameraTransform.Rotation;
 
-        var posData = playerPos.X.ToString() + "," + playerPos.Y.ToString() + "," + playerPos.Z.ToString()
-            + "," + camRotation.X.ToString() + "," + camRotation.Y.ToString() + "," + camRotation.Z.ToString() + "," + camRotation.W.ToString();
+        var posData = Math.Round(playerPos.X, 3).ToString() + "," + Math.Round(playerPos.Y, 3).ToString() + "," + Math.Round(playerPos.Z, 3).ToString()
+            + "," + Math.Round(camRotation.X, 3).ToString() + "," + Math.Round(camRotation.Y, 3).ToString() + "," + Math.Round(camRotation.Z, 3).ToString() + "," + Math.Round(camRotation.W, 3).ToString();
 
         // Every local game tick, send client's position data to Nakama
         m_Socket.SendMatchStateAsync(Server.MatchID, (long)Match.OPCODE.PLAYER_MOVE, posData);
