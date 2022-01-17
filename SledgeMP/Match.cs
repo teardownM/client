@@ -44,8 +44,6 @@ public static class Match {
             return await Task.FromResult<ISession>(null!);
         }
 
-        Discord.SetPresence(Discord.EDiscordState.Connecting);
-
         try {
             Client.m_Session = await Client.m_Connection.AuthenticateDeviceAsync(Client.m_DeviceID, Client.m_DeviceID);
             Log.Verbose("Successfully authenticated");
