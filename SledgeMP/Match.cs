@@ -147,6 +147,7 @@ public static class Match {
                     Log.General("Destroying body for {0}", client.UserId);
 
                     m_Clients[client.UserId].PlayerModel!.Body!.Destroy();
+                    m_Clients[client.UserId].PlayerModel!.ToolBody!.Destroy();
                 }
 
                 m_Clients.Remove(client.UserId);

@@ -121,6 +121,9 @@ public class PlayerModel {
 
     public void Remove() {
         if (Body != null)
-            Body!.Destroy();
+            Body.Destroy();
+
+        if (ToolBody != null)
+            ToolBody.Destroy();
     }
 }
