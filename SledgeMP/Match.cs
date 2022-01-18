@@ -13,7 +13,8 @@ public static class Match {
         PLAYER_SPAWN = 2,
         PLAYER_SHOOTS = 3,
         PLAYER_JOINS = 4,
-        PLAYER_GRABS = 5
+        PLAYER_GRABS = 5,
+        PLAYER_TOOL_CHANGE = 6
     }
 
     /**
@@ -68,7 +69,7 @@ public static class Match {
         foreach (IUserPresence client in match.Presences) {
             Log.General("{0} already in the game", client.UserId);
             Match.CreatePresence(client);
-            Client.m_ModelsToLoad.Add(client.UserId);
+            Client.m_PlayerModelsToLoad.Add(client.UserId);
         }
 
         Client.OnClientLoad();
@@ -114,6 +115,10 @@ public static class Match {
                 //Vector3 pos = Body.GetPosition(m_Clients[shootData[0]].PlayerModel!.Body!.Value);
                 // Log.General("Shooting with the {0} from position {1}", shootData[1], pos.ToString());
                 break;
+            case (Int64)OPCODE.PLAYER_TOOL_CHANGE:
+                List<string> toolChangeData = System.Text.Encoding.Default.GetString(newState.State).Split(',').ToList();
+                m_Clients[toolChangeData[0]].PlayerModel!.UpdateTool(toolChangeData[1]);
+                break;
             default:
                 break;
         }
@@ -128,7 +133,7 @@ public static class Match {
 
                 Log.General("Player {0} is joining the match!", client.UserId);
                 CreatePresence(client);
-                Client.m_ModelsToLoad.Add(client.UserId);
+                Client.m_PlayerModelsToLoad.Add(client.UserId);
             }
         }
         else if (presence.Leaves.Any()) {
