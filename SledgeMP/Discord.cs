@@ -8,7 +8,7 @@ public static class Discord {
         Connecting
     }
 
-    public static DiscordRpcClient? Client;
+    public static DiscordRpcClient? Client = null;
 
     public static Dictionary<EDiscordState, RichPresence> Presences = new Dictionary<EDiscordState, RichPresence>();
 
