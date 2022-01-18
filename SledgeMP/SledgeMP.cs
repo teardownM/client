@@ -96,7 +96,7 @@ public class SledgeMP {
 
     public static void OnReload() {
         Log.General("[ SledgeMP Reloaded ]");
-        Discord.Shutdown();
+        OnInitialize();
     }
 
     public static void OnShutdown() {
