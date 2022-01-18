@@ -112,8 +112,11 @@ public static class Match {
             case (Int64)OPCODE.PLAYER_SHOOTS:
                 List<string> shootData = System.Text.Encoding.Default.GetString(newState.State).Split(',').ToList();
 
-                //Vector3 pos = Body.GetPosition(m_Clients[shootData[0]].PlayerModel!.Body!.Value);
-                // Log.General("Shooting with the {0} from position {1}", shootData[1], pos.ToString());
+                var player = m_Clients[shootData[0]].PlayerModel!.Body!;
+                var playerTool = m_Clients[shootData[0]].PlayerModel!.ToolBody!;
+
+                Scene.Shoot(playerTool.m_Position, new Vector3(100, 0, 0), EProjectileType.Shotgun, 100, 50);
+                Log.General("Shooting with the {0} from m_Velocity {1}", shootData[1], player.m_Velocity.ToString());
                 break;
             case (Int64)OPCODE.PLAYER_TOOL_CHANGE:
                 List<string> toolChangeData = System.Text.Encoding.Default.GetString(newState.State).Split(',').ToList();

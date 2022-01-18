@@ -83,6 +83,11 @@ public static class Client {
 
         // Every local game tick, send client's position data to Nakama
         m_Socket.SendMatchStateAsync(Server.MatchID, (long)Match.OPCODE.PLAYER_MOVE, posData);
+
+        if (CPlayer.m_M1Down)
+        {
+            m_Socket.SendMatchStateAsync(Server.MatchID, (long)Match.OPCODE.PLAYER_SHOOTS, ToolManager.currentTool);
+        }
     }
 
     public static void SpawnPlayer(string clientID) {
