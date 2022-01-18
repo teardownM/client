@@ -89,6 +89,8 @@ public static class Client {
                     // 7. Notify every player local client has loaded in and should spawn their model
                     m_Socket!.SendMatchStateAsync(Server.MatchID, (long)Match.OPCODE.PLAYER_SPAWN, "");
                     Discord.SetPresence(Discord.EDiscordState.Connected);
+
+                    OnClientLoad();
                 }
                 break;
             default:
@@ -97,6 +99,7 @@ public static class Client {
     }
 
     public static void OnClientLoad() {
-        Discord.Client!.UpdateState($"Playing with {Match.m_Clients.Count()} others");
+        if (Discord.Client != null)
+            Discord.Client.UpdateState($"Playing with {Match.m_Clients.Count()} others");
     }
 }
