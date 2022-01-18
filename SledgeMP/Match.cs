@@ -71,8 +71,6 @@ public static class Match {
             Client.m_ModelsToLoad.Add(client.UserId);
         }
 
-        Client.OnClientLoad();
-
         return Client.m_Session;
     }
 
@@ -107,6 +105,7 @@ public static class Match {
                 float spawnZ = float.Parse(playerSpawnData[2], CultureInfo.InvariantCulture.NumberFormat);
 
                 CPlayer.m_Position = new Vector3(spawnX, spawnY, spawnZ);
+                Client.OnClientLoad();
                 break;
             case (Int64)OPCODE.PLAYER_SHOOTS:
                 List<string> shootData = System.Text.Encoding.Default.GetString(newState.State).Split(',').ToList();
@@ -154,6 +153,8 @@ public static class Match {
             if (Server.MatchID != null) {
                 await Client.m_Socket.LeaveMatchAsync(Server.MatchID);
             }
+
+            m_Clients.Clear();
 
             await Client.m_Socket.CloseAsync();
 
