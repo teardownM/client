@@ -17,9 +17,20 @@ public class IClientData {
     public Transform Transform = new Transform();
 }
 
+public class ModelSpawner {
+    public uint m_iHandle;
+    public string? m_VoxPath;
+    public string m_VoxName = "";
+    public float m_fScale = 0.5f;
+}
+
 public static class Client {
     public static string? m_DeviceID = Guid.NewGuid().ToString();
-    public static List<string> m_ModelsToLoad = new();
+    public static List<string> m_PlayerModelsToLoad = new();
+
+    // Used to load models dynamically in the game.
+    // Voxel spawning only works in the tick function.
+    public static List<ModelSpawner> m_ModelsToLoad = new();
 
     public static ISession? m_Session = null;
     public static IClient? m_Connection = null;
@@ -31,18 +42,32 @@ public static class Client {
     }
 
     public static void Tick() {
-        if (!m_Connected || Match.m_Clients.Count <= 0) {
+        if (!m_Connected) {
             return;
         }
 
-        if (m_ModelsToLoad.Any()) {
-            foreach (var userId in m_ModelsToLoad.ToList()) {
+        ToolManager.PlayerTool();
+
+        if (m_PlayerModelsToLoad.Any()) {
+            foreach (var userId in m_PlayerModelsToLoad.ToList()) {
                 // If it's not the local player, load in their vox player model
                 if (userId != m_Session!.UserId) {
                     SpawnPlayer(userId);
-                    m_ModelsToLoad.Remove(userId);
+                    m_PlayerModelsToLoad.Remove(userId);
 
                     Log.General("Loaded {0}'s model into the game", userId);
+                }
+            }
+        }
+
+        if (m_ModelsToLoad.Any())
+        {
+            foreach (var model in m_ModelsToLoad.ToList())
+            {
+                if (model != null && model.m_VoxPath != null)
+                {
+                    CShape.LoadVox(model.m_iHandle, model.m_VoxPath, model.m_VoxName, model.m_fScale);
+                    m_ModelsToLoad.Remove(model);
                 }
             }
         }
@@ -58,10 +83,16 @@ public static class Client {
 
         // Every local game tick, send client's position data to Nakama
         m_Socket.SendMatchStateAsync(Server.MatchID, (long)Match.OPCODE.PLAYER_MOVE, posData);
+
+        if (CPlayer.m_M1Down)
+        {
+            m_Socket.SendMatchStateAsync(Server.MatchID, (long)Match.OPCODE.PLAYER_SHOOTS, ToolManager.currentTool);
+        }
     }
 
     public static void SpawnPlayer(string clientID) {
         Match.m_Clients[clientID].PlayerModel = new PlayerModel();
+        Match.m_Clients[clientID].PlayerModel!.CreatePlayerTool();
         Match.m_Clients[clientID].PlayerModel!.Load();
 
         Match.m_Clients[clientID].Spawned = true;
@@ -81,7 +112,7 @@ public static class Client {
                 // 3. TODO: Force game to load map that server is using
                 // 4. Player loads into the map
                 // 5. EGameState changes to playing
-                // 6. Spawn players in m_ModelsToLoad
+                // 6. Spawn players in m_PlayerModelsToLoad
                 if (Server.MatchID != null) { // <-- Checking for Server.MatchID is the same as checking if m_Connected is true
                     m_Connected = true;
                     Log.General("Connected to server");

@@ -11,6 +11,9 @@ public class PlayerModel {
     public CShape? sRightLeg = null;
     public CShape? sHead = null;
 
+    public CBody? ToolBody = null;
+    public CShape? ToolShape = null;
+
     private double GetPitch(Quaternion q) {
         return Math.Asin(-2.0*(q.X*q.Z - q.W*q.Y));
     }
@@ -35,8 +38,16 @@ public class PlayerModel {
         Tags.SetTag(Body.m_Handle, "unbreakable", "");
     }
 
+    public void CreatePlayerTool()
+    {
+        ToolBody = new CBody();
+        ToolShape = new CShape(ToolBody);
+        ToolBody.m_Dynamic = false;
+        Tags.SetTag(ToolBody.m_Handle, "unbreakable", "");
+    }
+
     public void Load() {
-        if (Body == null || sBody == null || sHead == null || sLeftArm == null || sRightArm == null || sLeftLeg == null || sRightLeg == null)
+        if (Body == null || sBody == null || sHead == null || sLeftArm == null || sRightArm == null || sLeftLeg == null || sRightLeg == null || ToolBody == null || ToolShape == null)
             return;
 
         CShape.LoadVox(sBody.m_Handle, "Assets/Models/Player.vox", "body", 1f);
@@ -63,21 +74,49 @@ public class PlayerModel {
         Tags.SetTag(sRightLeg.m_Handle, "nocull", "");
 
         Body.m_Dynamic = true;
+
+        // Player Tool
+
+        CShape.LoadVox(ToolShape.m_Handle, "Assets/Models/sledge.vox", "", 0.5f);
+        ToolBody.m_Transform = new Transform(new Vector3(-0.2f, 0.7f, 0.1f), new Quaternion(0, 0.7071068f, 0.7071068f, 0));
     }
 
     public void Update(Vector3 startPos, Vector3 endPos, Quaternion playerRotation) {
-        Body!.m_Velocity = new Vector3(0, 0, 0);
-        Body!.m_AngularVelocity = new Vector3(0, 0, 0);
+        if (Body == null || ToolBody == null)
+            return;
 
-        if (!Body!.m_Position.Equals(endPos))
+        Body.m_Velocity = new Vector3(0, 0, 0);
+        Body.m_AngularVelocity = new Vector3(0, 0, 0);
+
+        ToolBody.m_Velocity = new Vector3(0, 0, 0);
+        ToolBody.m_AngularVelocity = new Vector3(0, 0, 0);
+
+        if (!Body.m_Position.Equals(endPos))
         {
-            Body!.m_Position = endPos;
+            Body.m_Position = endPos;
+            ToolBody.m_Transform = sLeftArm!.m_LocalTransform;
+            ToolBody.m_Position = Vector3.Add(Body!.m_Position, sLeftArm!.m_LocalTransform.Position); // TODO: Tool rotations!
         } 
 
-        if (!Body!.m_Rotation.Equals(playerRotation))
+        if (!Body.m_Rotation.Equals(playerRotation))
         {
             Body.m_Rotation = playerRotation;
         }
+    }
+
+    public void UpdateTool(string newTool)
+    {
+        ToolBody!.Destroy();
+        CreatePlayerTool();
+
+        var T = new ModelSpawner
+        {
+            m_iHandle = ToolShape!.m_Handle,
+            m_VoxPath = "Assets/Models/" + newTool + ".vox"
+        };
+
+        Client.m_ModelsToLoad.Add(T);
+     
     }
 
     public void Remove() {
