@@ -109,7 +109,7 @@ public class PlayerModel {
         ToolBody!.Destroy();
         CreatePlayerTool();
 
-        var T = new ModelSpawner
+        ModelSpawner T = new ModelSpawner
         {
             m_iHandle = ToolShape!.m_Handle,
             m_VoxPath = "Assets/Models/Tools/" + newTool + ".vox"
