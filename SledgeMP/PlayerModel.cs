@@ -77,7 +77,7 @@ public class PlayerModel {
 
         // Player Tool
 
-        CShape.LoadVox(ToolShape.m_Handle, "Assets/Models/sledge.vox", "", 0.5f);
+        CShape.LoadVox(ToolShape.m_Handle, "Assets/Models/Tools/sledge.vox", "", 0.5f);
         ToolBody.m_Transform = new Transform(new Vector3(-0.2f, 0.7f, 0.1f), new Quaternion(0, 0.7071068f, 0.7071068f, 0));
     }
 
@@ -112,7 +112,7 @@ public class PlayerModel {
         var T = new ModelSpawner
         {
             m_iHandle = ToolShape!.m_Handle,
-            m_VoxPath = "Assets/Models/" + newTool + ".vox"
+            m_VoxPath = "Assets/Models/Tools/" + newTool + ".vox"
         };
 
         Client.m_ModelsToLoad.Add(T);
