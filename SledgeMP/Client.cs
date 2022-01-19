@@ -75,12 +75,12 @@ public static class Client {
         Quaternion camRotation = CPlayer.m_CameraTransform.Rotation;
         Vector3 toolPos = new Vector3(0);
         Quaternion toolRot = new Quaternion(0, 0, 0, 0);
-        if (CPlayer.m_ToolBody != null) {
-            toolPos = CPlayer.m_ToolBody.m_Position;
-            toolRot = CPlayer.m_ToolBody.m_Rotation;
+        //if (CPlayer.m_ToolBody != null) {
+            //toolPos = CPlayer.m_ToolBody.m_Position;
+            //toolRot = CPlayer.m_ToolBody.m_Rotation;
 
             //Log.General("Tool: Pos {0}\nRot: {1}", toolPos.ToString(), toolRot.ToString());
-        }
+        //}
 
         // Tool part crashes the game ^
 
