@@ -79,8 +79,6 @@ public static class Match {
         switch (newState.OpCode) {
             case (Int64)OPCODE.PLAYER_MOVE:
                 List<string> playerMoveData = System.Text.Encoding.Default.GetString(newState.State).Split(',').ToList();
-                if (playerMoveData[0] == Client.m_DeviceID)
-                    break;
 
                 //Log.General("{0}\n\n", System.Text.Encoding.Default.GetString(newState.State));
 
