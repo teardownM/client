@@ -79,6 +79,10 @@ public static class Match {
         switch (newState.OpCode) {
             case (Int64)OPCODE.PLAYER_MOVE:
                 List<string> playerMoveData = System.Text.Encoding.Default.GetString(newState.State).Split(',').ToList();
+                if (playerMoveData[0] == Client.m_DeviceID)
+                    break;
+
+                //Log.General("{0}\n\n", System.Text.Encoding.Default.GetString(newState.State));
 
                 float x = float.Parse(playerMoveData[1], CultureInfo.InvariantCulture.NumberFormat);
                 float y = float.Parse(playerMoveData[2], CultureInfo.InvariantCulture.NumberFormat);
@@ -87,11 +91,24 @@ public static class Match {
                 float ry = float.Parse(playerMoveData[5], CultureInfo.InvariantCulture.NumberFormat);
                 float rz = float.Parse(playerMoveData[6], CultureInfo.InvariantCulture.NumberFormat);
                 float rw = float.Parse(playerMoveData[7], CultureInfo.InvariantCulture.NumberFormat);
-                                
+
+                float tx = float.Parse(playerMoveData[8], CultureInfo.InvariantCulture.NumberFormat);
+                float ty = float.Parse(playerMoveData[9], CultureInfo.InvariantCulture.NumberFormat);
+                float tz = float.Parse(playerMoveData[10], CultureInfo.InvariantCulture.NumberFormat);
+                float tr_x = float.Parse(playerMoveData[11], CultureInfo.InvariantCulture.NumberFormat);
+                float tr_y = float.Parse(playerMoveData[12], CultureInfo.InvariantCulture.NumberFormat);
+                float tr_z = float.Parse(playerMoveData[13], CultureInfo.InvariantCulture.NumberFormat);
+                float tr_w = float.Parse(playerMoveData[14], CultureInfo.InvariantCulture.NumberFormat);
+
                 Vector3 startPos = m_Clients[playerMoveData[0]].PlayerModel!.Body!.m_Position;
                 Vector3 endPos = new Vector3(x, y, z);
 
                 m_Clients[playerMoveData[0]].PlayerModel!.Update(startPos, endPos, new Quaternion(rx, ry, rz, rw));
+                m_Clients[playerMoveData[0]].PlayerModel!.ToolBody!.m_Transform = new Transform(
+                    new Vector3(tx, ty, tz),
+                    new Quaternion(tr_x, tr_y, tr_z, tr_w)
+                );
+
                 break;
 
             // OPCODE.PLAYER_SPAWN gets called when a player joins the game, the server send a message directly to them to spawn at a specific spawn point

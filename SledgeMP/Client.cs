@@ -42,9 +42,8 @@ public static class Client {
     }
 
     public static void Tick() {
-        if (!m_Connected) {
+        if (!m_Connected)
             return;
-        }
 
         ToolManager.PlayerTool();
 
@@ -60,12 +59,9 @@ public static class Client {
             }
         }
 
-        if (m_ModelsToLoad.Any())
-        {
-            foreach (var model in m_ModelsToLoad.ToList())
-            {
-                if (model != null && model.m_VoxPath != null)
-                {
+        if (m_ModelsToLoad.Any()) {
+            foreach (var model in m_ModelsToLoad.ToList()) {
+                if (model != null && model.m_VoxPath != null) {
                     CShape.LoadVox(model.m_iHandle, model.m_VoxPath, model.m_VoxName, model.m_fScale);
                     m_ModelsToLoad.Remove(model);
                 }
@@ -77,15 +73,28 @@ public static class Client {
 
         Vector3 playerPos = CPlayer.m_Position;
         Quaternion camRotation = CPlayer.m_CameraTransform.Rotation;
+        Vector3 toolPos = new Vector3(0);
+        Quaternion toolRot = new Quaternion(0, 0, 0, 0);
+        if (CPlayer.m_ToolBody != null) {
+            toolPos = CPlayer.m_ToolBody.m_Position;
+            toolRot = CPlayer.m_ToolBody.m_Rotation;
 
-        string posData = Math.Round(playerPos.X, 3).ToString() + "," + Math.Round(playerPos.Y, 3).ToString() + "," + Math.Round(playerPos.Z, 3).ToString()
-            + "," + Math.Round(camRotation.X, 3).ToString() + "," + Math.Round(camRotation.Y, 3).ToString() + "," + Math.Round(camRotation.Z, 3).ToString() + "," + Math.Round(camRotation.W, 3).ToString();
+            //Log.General("Tool: Pos {0}\nRot: {1}", toolPos.ToString(), toolRot.ToString());
+        }
+
+        // Tool part crashes the game ^
+
+        string posData = Math.Round(playerPos.X, 3).ToString() + "," + Math.Round(playerPos.Y, 3).ToString() + "," + Math.Round(playerPos.Z, 3).ToString() // x y z
+            + "," + Math.Round(camRotation.X, 3).ToString() + "," + Math.Round(camRotation.Y, 3).ToString() + "," + Math.Round(camRotation.Z, 3).ToString() // rx ry rz
+            + "," + Math.Round(camRotation.W, 3).ToString() // rw
+            + "," + Math.Round(toolPos.X, 3).ToString() + "," + Math.Round(toolPos.Y, 3).ToString() + "," + Math.Round(toolPos.Z, 3).ToString()
+            + "," + Math.Round(toolRot.X, 3).ToString() + "," + Math.Round(toolRot.Y, 3).ToString() + "," + Math.Round(toolRot.Z, 3).ToString()
+            + "," + Math.Round(toolRot.W, 3).ToString();
 
         // Every local game tick, send client's position data to Nakama
         m_Socket.SendMatchStateAsync(Server.MatchID, (long)Match.OPCODE.PLAYER_MOVE, posData);
 
-        if (CPlayer.m_M1Down)
-        {
+        if (CPlayer.m_M1Down) {
             m_Socket.SendMatchStateAsync(Server.MatchID, (long)Match.OPCODE.PLAYER_SHOOTS, ToolManager.currentTool);
         }
     }
