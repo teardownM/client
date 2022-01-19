@@ -94,8 +94,8 @@ public class PlayerModel {
         if (!Body.m_Position.Equals(endPos))
         {
             Body.m_Position = endPos;
-            ToolBody.m_Transform = sLeftArm!.m_LocalTransform;
-            ToolBody.m_Position = Vector3.Add(Body!.m_Position, sLeftArm!.m_LocalTransform.Position); // TODO: Tool rotations!
+            //ToolBody.m_Transform = sLeftArm!.m_LocalTransform;
+            //ToolBody.m_Position = Vector3.Add(Body!.m_Position, sLeftArm!.m_LocalTransform.Position); // TODO: Tool rotations!
         } 
 
         if (!Body.m_Rotation.Equals(playerRotation))
@@ -116,7 +116,6 @@ public class PlayerModel {
         };
 
         Client.m_ModelsToLoad.Add(T);
-     
     }
 
     public void Remove() {
