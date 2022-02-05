@@ -1,10 +1,10 @@
 .vs
 .vscode
 Lib
-SledgeMP/bin
-SledgeMP/obj
-SledgeMP/Properties
-SledgeMP/SledgeMP.csproj.user
+TeardownM/bin
+TeardownM/obj
+TeardownM/Properties
+TeardownM/TeardownM.csproj.user
 modules
 
 .cookie
