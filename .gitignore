@@ -1,7 +1,10 @@
 .vs
+.vscode
 Lib
-SledgeMP/bin/*
-SledgeMP/obj/*
+SledgeMP/bin
+SledgeMP/obj
+SledgeMP/Properties
+SledgeMP/SledgeMP.csproj.user
 modules
 
 .cookie
