@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
        <TargetFramework>net6.0</TargetFramework>
-       <AssemblyName>SledgeMP</AssemblyName>
+       <AssemblyName>TeardownM</AssemblyName>
        <ImplicitUsings>enable</ImplicitUsings>
        <Nullable>enable</Nullable>
        <Platforms>x64</Platforms>
@@ -9,7 +9,7 @@
     </PropertyGroup>
     
     <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-        <Exec Command="xcopy $(ProjectDir)$(OutDir)SledgeMP.dll $(sledgeDir)\mods\SledgeMP /y&#xD;&#xA;xcopy $(ProjectDir)$(OutDir)SledgeMP.dll C:\TeardownDevelopment\sledge2\proj\Debug\mods\SledgeMP /y" />
+        <Exec Command="xcopy $(ProjectDir)$(OutDir)TeardownM.dll $(sledgeDir)\mods\TeardownM /y&#xD;&#xA;xcopy $(ProjectDir)$(OutDir)TeardownM.dll C:\TeardownDevelopment\sledge2\proj\Debug\mods\TeardownM /y" />
     </Target>
     <ItemGroup>
         <Reference Include="Nakama">
