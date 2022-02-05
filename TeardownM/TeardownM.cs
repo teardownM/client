@@ -63,6 +63,8 @@ public class TeardownM
 
     public static void OnInitialize()
     {
+        LuaModLoader.Load();
+
         if (Game.GetState() == EGameState.Unknown || Game.GetState() == EGameState.Splash)
             Game.SetState(EGameState.Menu);
 

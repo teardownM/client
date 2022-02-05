@@ -9,7 +9,8 @@
     </PropertyGroup>
     
     <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-      <Exec Command="xcopy $(ProjectDir)$(OutDir)TeardownM.dll $(sledgeDir)\mods\TeardownM /y C:\TeardownDevelopment\sledge2\proj\Debug\mods\TeardownMxcopy $(ProjectDir)$(OutDir)TeardownM.dll C:\TeardownDevelopment\sledge2\proj\Debug\mods\TeardownM /y" />
+      <Exec Command="xcopy $(ProjectDir)$(OutDir)TeardownM.dll $(sledgeDir)\mods\TeardownM /y" />
+      <Exec Command="xcopy $(ProjectDir)\lua\* $(sledgeDir)\mods\TeardownM\lua /y" />
     </Target>
     <ItemGroup>
         <Reference Include="Nakama">

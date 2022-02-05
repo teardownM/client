@@ -1,6 +1,9 @@
 ﻿using SledgeLib;
-using System.Globalization;
-using System.Numerics;
+
+// Things todo:
+// 1. Fix on spawn update vehicle location
+// 2. When a player gets out of a car while driving the car suddenly stops for the all other players
+// 3. Getting into the same vehicle as someone else (passenger)
 
 public class VehicleManager
 {
