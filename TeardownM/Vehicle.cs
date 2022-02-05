@@ -27,7 +27,7 @@ public class VehicleManager
         }
     }
 
-    // Move the vehicle to a position
+    // Move the vehicle to a position 
     public static void Drive(List<string> vehicleMoveData)
     {
         string vehicleHandle = vehicleMoveData[1];
