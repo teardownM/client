@@ -4,24 +4,30 @@ using SledgeLib;
 using System.Globalization;
 using System.Numerics;
 
-public static class Match {
+public static class Match
+{
     // Dictionary of all current players in the game
     public static Dictionary<string, IClientData> m_Clients = new();
 
-    public enum OPCODE : Int64 {
+    public enum OPCODE : Int64
+    {
         PLAYER_MOVE = 1,
         PLAYER_SPAWN = 2,
         PLAYER_SHOOTS = 3,
         PLAYER_JOINS = 4,
         PLAYER_GRABS = 5,
-        PLAYER_TOOL_CHANGE = 6
+        PLAYER_TOOL_CHANGE = 6,
+        PLAYER_VEHICLE = 7,
+        PLAYER_VEHICLE_MOVE = 8
     }
 
     /**
      * Creates an instance of a client connected.
      */
-    public static void CreatePresence(IUserPresence player) {
-        IClientData newPlayer = new() {
+    public static void CreatePresence(IUserPresence player)
+    {
+        IClientData newPlayer = new()
+        {
             SessionID = player.SessionId,
             Username = player.UserId,
             Status = player.Status,
@@ -33,23 +39,28 @@ public static class Match {
         Log.General("Created Player Presence");
     }
 
-    public static async Task<ISession> Connect(string ip, ushort port) {
+    public static async Task<ISession> Connect(string ip, ushort port)
+    {
         if (Server.MatchID != null)
             Disconnect();
 
         // Establish a connection to Nakama server
         Client.m_Connection = new Nakama.Client("http", ip, port, "defaultkey");
         Client.m_Connection.Timeout = 1;
-        if (Client.m_Connection == null) {
+        if (Client.m_Connection == null)
+        {
             Log.Error("Failed to create connection");
             return await Task.FromResult<ISession>(null!);
         }
 
-        try {
+        try
+        {
             Client.m_Session = await Client.m_Connection.AuthenticateDeviceAsync(Client.m_DeviceID, Client.m_DeviceID);
             Log.Verbose("Successfully authenticated");
             Log.General("Your ID: {0}", Client.m_Session.UserId);
-        } catch (Exception) {
+        }
+        catch (Exception)
+        {
             return await Task.FromResult<ISession>(null!);
         }
 
@@ -66,7 +77,8 @@ public static class Match {
         Log.Verbose("Successfully connected to match {0}", Server.MatchID!);
         Client.m_Connected = true;
 
-        foreach (IUserPresence client in match.Presences) {
+        foreach (IUserPresence client in match.Presences)
+        {
             Log.General("{0} already in the game", client.UserId);
             Match.CreatePresence(client);
             Client.m_PlayerModelsToLoad.Add(client.UserId);
@@ -75,8 +87,10 @@ public static class Match {
         return Client.m_Session;
     }
 
-    public static void OnMatchState(IMatchState newState) {
-        switch (newState.OpCode) {
+    public static void OnMatchState(IMatchState newState)
+    {
+        switch (newState.OpCode)
+        {
             case (Int64)OPCODE.PLAYER_MOVE:
                 List<string> playerMoveData = System.Text.Encoding.Default.GetString(newState.State).Split(',').ToList();
 
@@ -87,7 +101,7 @@ public static class Match {
                 float ry = float.Parse(playerMoveData[5], CultureInfo.InvariantCulture.NumberFormat);
                 float rz = float.Parse(playerMoveData[6], CultureInfo.InvariantCulture.NumberFormat);
                 float rw = float.Parse(playerMoveData[7], CultureInfo.InvariantCulture.NumberFormat);
-                                
+
                 Vector3 startPos = m_Clients[playerMoveData[0]].PlayerModel!.Body!.m_Position;
                 Vector3 endPos = new Vector3(x, y, z);
 
@@ -95,7 +109,7 @@ public static class Match {
                 break;
 
             // OPCODE.PLAYER_SPAWN gets called when a player joins the game, the server send a message directly to them to spawn at a specific spawn point
-            case (Int64)OPCODE.PLAYER_SPAWN: 
+            case (Int64)OPCODE.PLAYER_SPAWN:
                 if (Game.GetState() != EGameState.Playing)
                     break;
 
@@ -121,15 +135,40 @@ public static class Match {
                 List<string> toolChangeData = System.Text.Encoding.Default.GetString(newState.State).Split(',').ToList();
                 m_Clients[toolChangeData[0]].PlayerModel!.UpdateTool(toolChangeData[1]);
                 break;
+            case (Int64)OPCODE.PLAYER_VEHICLE:
+                List<string> vehicleChangeData = System.Text.Encoding.Default.GetString(newState.State).Split(',').ToList();
+                Log.General("{0} is in a car {1}: {2}", vehicleChangeData[0], vehicleChangeData[1], vehicleChangeData[2]);
+
+                if (vehicleChangeData[1] == "true")
+                {
+                    m_Clients[vehicleChangeData[0]]?.PlayerModel?.Remove();
+                }
+                else
+                {
+                    Client.m_PlayerModelsToLoad.Add(vehicleChangeData[0]);
+                }
+
+                break;
+            case (Int64)OPCODE.PLAYER_VEHICLE_MOVE:
+                List<string> vehicleMoveData = System.Text.Encoding.Default.GetString(newState.State).Split(',').ToList();
+
+                if (vehicleMoveData[0] != Client.m_Session!.UserId)
+                {
+                    VehicleManager.Drive(vehicleMoveData);
+                }
+                break;
             default:
                 break;
         }
     }
 
 
-    public static void OnMatchPresence(IMatchPresenceEvent presence) {
-        if (presence.Joins.Any()) {
-            foreach (IUserPresence? client in presence.Joins) {
+    public static void OnMatchPresence(IMatchPresenceEvent presence)
+    {
+        if (presence.Joins.Any())
+        {
+            foreach (IUserPresence? client in presence.Joins)
+            {
                 if (client.UserId == Client.m_Session!.UserId)
                     continue;
 
@@ -138,12 +177,15 @@ public static class Match {
                 Client.m_PlayerModelsToLoad.Add(client.UserId);
             }
         }
-        else if (presence.Leaves.Any()) {
-            foreach (IUserPresence? client in presence.Leaves) {
+        else if (presence.Leaves.Any())
+        {
+            foreach (IUserPresence? client in presence.Leaves)
+            {
                 if (client.UserId == Client.m_Session!.UserId)
                     continue;
 
-                if (m_Clients[client.UserId].PlayerModel!.Body != null) {
+                if (m_Clients[client.UserId].PlayerModel!.Body != null)
+                {
                     Log.General("Destroying body for {0}", client.UserId);
 
                     m_Clients[client.UserId].PlayerModel!.Body!.Destroy();
@@ -157,9 +199,12 @@ public static class Match {
         }
     }
 
-    public static async void Disconnect() {
-        if (Client.m_Socket != null) {
-            if (Server.MatchID != null) {
+    public static async void Disconnect()
+    {
+        if (Client.m_Socket != null)
+        {
+            if (Server.MatchID != null)
+            {
                 await Client.m_Socket.LeaveMatchAsync(Server.MatchID);
             }
 
@@ -172,7 +217,7 @@ public static class Match {
             Client.m_Session = null;
             Client.m_Connected = false;
 
-            m_Clients = new() {};
+            m_Clients = new() { };
 
             Log.General("Disconnected from server");
 
@@ -180,7 +225,9 @@ public static class Match {
                 Game.SetState(EGameState.Menu);
 
             Discord.SetPresence(Discord.EDiscordState.MainMenu);
-        } else {
+        }
+        else
+        {
             Log.General("Not connected to server");
         }
     }

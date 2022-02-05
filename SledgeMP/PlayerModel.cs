@@ -1,7 +1,8 @@
 using SledgeLib;
 using System.Numerics;
 
-public class PlayerModel {
+public class PlayerModel
+{
     public CBody? Body = null;
 
     public CShape? sBody = null;
@@ -14,19 +15,23 @@ public class PlayerModel {
     public CBody? ToolBody = null;
     public CShape? ToolShape = null;
 
-    private double GetPitch(Quaternion q) {
-        return Math.Asin(-2.0*(q.X*q.Z - q.W*q.Y));
+    private double GetPitch(Quaternion q)
+    {
+        return Math.Asin(-2.0 * (q.X * q.Z - q.W * q.Y));
     }
 
-    private double GetYaw(Quaternion q) {
-        return Math.Atan2(2.0*(q.X*q.Y + q.W*q.Z), q.W*q.W + q.X*q.X - q.Y*q.Y - q.Z*q.Z);
+    private double GetYaw(Quaternion q)
+    {
+        return Math.Atan2(2.0 * (q.X * q.Y + q.W * q.Z), q.W * q.W + q.X * q.X - q.Y * q.Y - q.Z * q.Z);
     }
 
-    private double GetRoll(Quaternion q) {
-        return Math.Atan2(2.0*(q.X*q.Z + q.W*q.Y), q.W*q.W - q.X*q.X - q.Y*q.Y + q.Z*q.Z);
+    private double GetRoll(Quaternion q)
+    {
+        return Math.Atan2(2.0 * (q.X * q.Z + q.W * q.Y), q.W * q.W - q.X * q.X - q.Y * q.Y + q.Z * q.Z);
     }
 
-    public PlayerModel() {
+    public PlayerModel()
+    {
         Body = new CBody();
         sBody = new CShape(Body);
         sHead = new CShape(Body);
@@ -46,7 +51,8 @@ public class PlayerModel {
         Tags.SetTag(ToolBody.m_Handle, "unbreakable", "");
     }
 
-    public void Load() {
+    public void Load()
+    {
         if (Body == null || sBody == null || sHead == null || sLeftArm == null || sRightArm == null || sLeftLeg == null || sRightLeg == null || ToolBody == null || ToolShape == null)
             return;
 
@@ -81,7 +87,8 @@ public class PlayerModel {
         ToolBody.m_Transform = new Transform(new Vector3(-0.2f, 0.7f, 0.1f), new Quaternion(0, 0.7071068f, 0.7071068f, 0));
     }
 
-    public void Update(Vector3 startPos, Vector3 endPos, Quaternion playerRotation) {
+    public void Update(Vector3 startPos, Vector3 endPos, Quaternion playerRotation)
+    {
         if (Body == null || ToolBody == null)
             return;
 
@@ -96,7 +103,7 @@ public class PlayerModel {
             Body.m_Position = endPos;
             ToolBody.m_Transform = sLeftArm!.m_LocalTransform;
             ToolBody.m_Position = Vector3.Add(Body!.m_Position, sLeftArm!.m_LocalTransform.Position); // TODO: Tool rotations!
-        } 
+        }
 
         if (!Body.m_Rotation.Equals(playerRotation))
         {
@@ -116,10 +123,10 @@ public class PlayerModel {
         };
 
         Client.m_ModelsToLoad.Add(T);
-     
     }
 
-    public void Remove() {
+    public void Remove()
+    {
         if (Body != null)
             Body.Destroy();
 

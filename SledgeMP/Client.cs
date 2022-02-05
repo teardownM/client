@@ -46,7 +46,9 @@ public static class Client {
             return;
         }
 
-        ToolManager.PlayerTool();
+        PlayerManager.Tick();
+        ToolManager.Tick();
+        VehicleManager.Tick();
 
         if (m_PlayerModelsToLoad.Any()) {
             foreach (var userId in m_PlayerModelsToLoad.ToList()) {
@@ -70,24 +72,7 @@ public static class Client {
                     m_ModelsToLoad.Remove(model);
                 }
             }
-        }
-
-        if (m_Socket == null || m_Session == null || Server.MatchID == null)
-            return;
-
-        Vector3 playerPos = CPlayer.m_Position;
-        Quaternion camRotation = CPlayer.m_CameraTransform.Rotation;
-
-        var posData = Math.Round(playerPos.X, 3).ToString() + "," + Math.Round(playerPos.Y, 3).ToString() + "," + Math.Round(playerPos.Z, 3).ToString()
-            + "," + Math.Round(camRotation.X, 3).ToString() + "," + Math.Round(camRotation.Y, 3).ToString() + "," + Math.Round(camRotation.Z, 3).ToString() + "," + Math.Round(camRotation.W, 3).ToString();
-
-        // Every local game tick, send client's position data to Nakama
-        m_Socket.SendMatchStateAsync(Server.MatchID, (long)Match.OPCODE.PLAYER_MOVE, posData);
-
-        if (CPlayer.m_M1Down)
-        {
-            m_Socket.SendMatchStateAsync(Server.MatchID, (long)Match.OPCODE.PLAYER_SHOOTS, ToolManager.currentTool);
-        }
+        }                      
     }
 
     public static void SpawnPlayer(string clientID) {

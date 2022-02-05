@@ -1,6 +1,5 @@
-.vs/*
-Lib/bin/*
-Lib/obj/*
+.vs
+Lib
 SledgeMP/bin/*
 SledgeMP/obj/*
 modules
