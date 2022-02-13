@@ -10,7 +10,7 @@
     
     <Target Name="PostBuild" AfterTargets="PostBuildEvent">
       <Exec Command="xcopy $(ProjectDir)$(OutDir)TeardownM.dll $(sledgeDir)\mods\TeardownM /y" />
-      <Exec Command="xcopy $(ProjectDir)\lua\* $(sledgeDir)\mods\TeardownM\lua /y" />
+      <Exec Command="xcopy $(ProjectDir)\lua\dist\* $(sledgeDir)\mods\TeardownM\lua\dist /y" />
     </Target>
     <ItemGroup>
         <Reference Include="Nakama">
