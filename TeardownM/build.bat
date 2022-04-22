@@ -1,7 +1,7 @@
 @echo off
 dotnet build /p:Configuration=Release /p:Platform="x64"
 if /i "%1" equ "-r" (
-    cd ..
+    cd ..\..\..\
     start .\sledge.exe -nolauncher
-    start .\sledge.exe -nolauncher
+    exit
 )
