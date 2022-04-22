@@ -1,0 +1,32 @@
+<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+       <TargetFramework>net6.0</TargetFramework>
+       <AssemblyName>TeardownM</AssemblyName>
+       <ImplicitUsings>enable</ImplicitUsings>
+       <Nullable>enable</Nullable>
+       <Platforms>x64</Platforms>
+       <ProduceReferenceAssembly>False</ProduceReferenceAssembly>
+    </PropertyGroup>
+    
+    <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+      <Exec Command="xcopy $(ProjectDir)$(OutDir)TeardownM.dll $(sledgeDir)\mods\TeardownM /y" />
+      <Exec Command="xcopy $(ProjectDir)\lua\dist\* $(sledgeDir)\mods\TeardownM\lua\dist /y" />
+    </Target>
+    <ItemGroup>
+        <Reference Include="Nakama">
+          <HintPath>dep/Nakama.dll</HintPath>
+        </Reference>
+        <Reference Include="sledgelib">
+          <HintPath>$(sledgeDir)\mods\sledgelib.dll</HintPath>
+        </Reference>
+        <Reference Include="Steamworks">
+          <HintPath>dep/Steamworks.NET.dll</HintPath>
+        </Reference>
+        <Reference Include="Newtonsoft.JSON">
+          <HintPath>dep/Newtonsoft.Json.dll</HintPath>
+        </Reference>
+        <Reference Include="DiscordRPC">
+          <HintPath>dep/DiscordRPC.dll</HintPath>
+        </Reference>
+      </ItemGroup>
+</Project>

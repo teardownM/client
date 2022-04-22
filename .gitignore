@@ -1,0 +1,10 @@
+.vs
+.vscode
+Lib
+TeardownM/bin
+TeardownM/obj
+TeardownM/Properties
+TeardownM/TeardownM.csproj.user
+modules
+
+.cookie
