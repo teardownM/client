@@ -13,10 +13,8 @@ To run your own server, please see [here](#).
 1. Create an environment variable called `SLEDGE_ROOT_DIR`, it should be set to your sledge dir where mods, sledge.exe, etc.. is`
 2. Navigate to your sledge/mods folder
 3. Clone this repository inside
-4. Create a folder in `mods` called `TeardownM`
-5. Copy `client/TeardownM/dep/*.dll` into `mods/TeardownM/dependencies`
-6. Run `build.bat`
-7. Run sledge.exe
+4. Run `Build.ps1`
+5. Run sledge.exe
 
 ## Contribution:
 There should be an active todo list of issues and tasks.
