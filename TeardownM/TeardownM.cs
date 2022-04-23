@@ -28,11 +28,6 @@ public class TeardownM : ISledgeMod {
         }
     }
 
-    [LuaFunction("Test")]
-    public static void Test(string message) {
-        Log.General("{0}", message);
-    }
-
     public void Load() {
         if (!Discord.Initialize()) {
             Log.Error("Failed to initialize Discord client");

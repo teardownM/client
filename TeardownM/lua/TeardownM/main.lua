@@ -1,3 +1,5 @@
+#include "TDM.lua"
+
 function init()
-    Test('Hello from Lua :D')
+    TDM_SetRichPresence(ERichPresence.Connected)
 end

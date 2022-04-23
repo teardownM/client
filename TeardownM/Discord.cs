@@ -23,6 +23,17 @@ public static class Discord {
             },
         });
 
+        Presences.Add(EDiscordState.Connected, new RichPresence {
+            State = "In Game",
+            Timestamps = new Timestamps() {
+                Start = DateTime.UtcNow
+            },
+            Assets = new Assets() {
+                LargeImageKey = "logo",
+                LargeImageText = "Teardown Multiplayer"
+            },
+        });
+
         Client = new DiscordRpcClient("929980695663747083", 0);
         Client.RegisterUriScheme();
 
