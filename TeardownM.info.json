@@ -1,8 +1,0 @@
-{
-    "sModName": "TeardownM",
-    "sModAuthor": "Daniel W | Alex | GGProGaming",
-    "sTypeName": "TeardownM",
-    "sLoadMethodName": "OnInitialize",
-    "sReloadMethodName": "OnReload",
-    "sUnloadMethodName": "OnShutdown"
-}

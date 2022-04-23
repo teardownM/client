@@ -8,3 +8,4 @@ TeardownM/TeardownM.csproj.user
 modules
 
 .cookie
+*.pdb
