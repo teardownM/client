@@ -36,6 +36,11 @@ if (-not(Test-Path -Path "$SledgeDir\\sledge.exe" -PathType Leaf) -or -not(Test-
     return
 }
 
+if (-not(Test-Path -Path "$SledgeDir\bin\sledgelib.dll" -PathType Leaf)) {
+    Write-Output("[Error] Unable to locate `"$SledgeDir/bin/sledgelib.dll`", sledge must have failed copying it")
+    return
+}
+
 Write-Output("Copying Dependencies")
 
 $SledgeDependencyDir = "$SledgeDir\mods\TeardownM\dependencies"
