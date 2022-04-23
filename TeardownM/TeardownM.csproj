@@ -13,12 +13,14 @@
     <Reference Include="sledgelib">
       <HintPath>..\..\..\bin\sledgelib.dll</HintPath>
     </Reference>
+    <Reference Include="Nakama">
+      <HintPath>dep/Nakama.dll</HintPath>
+    </Reference>
     <Reference Include="DiscordRPC">
       <HintPath>dep/DiscordRPC.dll</HintPath>
     </Reference>
+    <Reference Include="Newtonsoft.JSON">
+      <HintPath>dep/Newtonsoft.Json.dll</HintPath>
+    </Reference>
   </ItemGroup>
-
-  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="copy /Y &quot;$(TargetDir)$(TargetName).dll&quot; &quot;$(ProjectDir)..\..\$(TargetName).dll&quot;&#xD;&#xA;copy /Y &quot;$(TargetDir)$(TargetName).pdb&quot; &quot;$(ProjectDir)..\$(TargetName).pdb&quot;&#xD;&#xA;" />
-  </Target>
 </Project>
