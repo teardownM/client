@@ -11,7 +11,7 @@
 
   <ItemGroup>
     <Reference Include="sledgelib">
-      <HintPath>..\..\..\bin\sledgelib.dll</HintPath>
+      <HintPath>$(SLEDGE_ROOT_DIR)\bin\sledgelib.dll</HintPath>
     </Reference>
     <Reference Include="Nakama">
       <HintPath>dep/Nakama.dll</HintPath>
