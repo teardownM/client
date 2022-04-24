@@ -4,6 +4,7 @@ $InformationPreference = "Continue"
 $VerbosePreference = "SilentlyContinue"
 $RunSledge = $false
 $NBR = $false
+$Log = $false
 
 foreach($Argument in $args) {
     if($Argument -eq "-Help") {
@@ -16,6 +17,7 @@ Options:
     -PSDebug: Outputs debug information, useful for debugging build scripts (default: false)
     -PSVerbose: Outputs everything, use this if you have issues (default: false)
     -NBR: Don't build, just run sledge (default: false)
+    -Log: Logs build output to a file (default: false)
 "
 
         exit
@@ -42,11 +44,18 @@ Options:
     if ($Argument -eq "-NBR") {
         $NBR = $true
     }
+
+    if ($Argument -eq "-Log") {
+        $Log = $true
+    }
 }
 
+if ($Log -eq $true) {
+    if (Test-Path "$((Get-Item .).FullName)\Build.log" -PathType Leaf) {
+        Remove-Item "$((Get-Item .).FullName)\Build.log" -ErrorAction SilentlyContinue
+    }
 
-if (Test-Path "$((Get-Item .).FullName)\Build.log" -PathType Leaf) {
-    Remove-Item "$((Get-Item .).FullName)\Build.log" -ErrorAction SilentlyContinue
+    Start-Transcript -Path "$((Get-Item .).FullName)\Build.log" -UseMinimalHeader -Append
 }
 
 Write-Verbose("Building Sledge with configuration: $BuildConfiguration")
@@ -256,6 +265,10 @@ if ($CopiedFiles -ne 0) {
 
 if ($NBR -eq $true) {
     Start-Process -FilePath "$SledgeDir\sledge.exe" -WorkingDirectory $SledgeDir
+    if ($Log -eq $true) {
+        Stop-Transcript
+    }
+
     exit
 }
 
@@ -272,4 +285,8 @@ Copy-Item -Path "$((Get-Item .).FullName)\TeardownM\bin\x64\$BuildConfiguration\
 if ($RunSledge -eq $true) {
     Write-Host("Starting Sledge")
     Start-Process -FilePath "$SledgeDir\sledge.exe" -WorkingDirectory $SledgeDir
+}
+
+if ($Log -eq $true) {
+    Stop-Transcript
 }
