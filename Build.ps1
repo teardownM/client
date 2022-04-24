@@ -50,6 +50,8 @@ Options:
     }
 }
 
+if ($args.Count -eq 2 -and $NBR -eq $true -and $Log -eq $true) { $Log = $false }
+
 if ($Log -eq $true) {
     if (Test-Path "$((Get-Item .).FullName)\Build.log" -PathType Leaf) {
         Remove-Item "$((Get-Item .).FullName)\Build.log" -ErrorAction SilentlyContinue
