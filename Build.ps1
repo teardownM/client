@@ -3,6 +3,7 @@ $DebugPreference = "SilentlyContinue"
 $InformationPreference = "Continue"
 $VerbosePreference = "SilentlyContinue"
 $RunSledge = $false
+$NBR = $false
 
 foreach($Argument in $args) {
     if($Argument -eq "-Help") {
@@ -14,6 +15,7 @@ Options:
     -Run: Run Sledge after build (default: false)
     -PSDebug: Outputs debug information, useful for debugging build scripts (default: false)
     -PSVerbose: Outputs everything, use this if you have issues (default: false)
+    -NBR: Don't build, just run sledge (default: false)
 "
 
         exit
@@ -35,6 +37,10 @@ Options:
 
     if ($Argument -eq "-PSVerbose") {
         $VerbosePreference = "Continue"
+    }
+
+    if ($Argument -eq "-NBR") {
+        $NBR = $true
     }
 }
 
@@ -246,6 +252,11 @@ if ($CopiedFiles -ne 0) {
     Write-Host("Copied $CopiedFiles Files")
 } else {
     Write-Debug("No Files Needed to be Copied")
+}
+
+if ($NBR -eq $true) {
+    Start-Process -FilePath "$SledgeDir\sledge.exe" -WorkingDirectory $SledgeDir
+    exit
 }
 
 $Output = ""
