@@ -1,0 +1,37 @@
+**********************
+PowerShell transcript start
+Start time: 20220424032805
+**********************
+Transcript started, output file is D:\Development\Github\TeardownM\client\Build.log
+VERBOSE: Building Sledge with configuration: Release
+VERBOSE: Run Sledge: False
+VERBOSE: Getting Sledge Directory
+VERBOSE: Checking for Sledge.exe and mods folder
+VERBOSE: Checking for bin\sledgelib.dll
+DEBUG: SledgeDir: D:\Development\Github\sledge\proj\build\Debug
+DEBUG: TeardownM Dir: D:\Development\Github\TeardownM\client\TeardownM
+DEBUG: TeardownM Dep Dir: D:\Development\Github\sledge\proj\build\Debug\mods\TeardownM\dependencies
+VERBOSE: Checking for TeardownM dependencies
+VERBOSE: Checking for sledge/mods/TeardownM/dependencies
+DEBUG: Checking for deleted dpendencies
+DEBUG: Copying Dependencies
+VERBOSE: Copy Dependency | Found File: D:\Development\Github\TeardownM\client\TeardownM\dep\DiscordRPC.dll
+VERBOSE: Copy Dependency | Found File: D:\Development\Github\TeardownM\client\TeardownM\dep\Nakama.dll
+VERBOSE: Copy Dependency | Found File: D:\Development\Github\TeardownM\client\TeardownM\dep\Newtonsoft.Json.dll
+DEBUG: No Dependencies Needed to be Copied
+VERBOSE: Getting Game Path
+DEBUG: Steam Path: E:\Program Files (x86)\Steam
+DEBUG: Teardown Path: E:\Program Files (x86)\Steam\steamapps\common\Teardown
+VERBOSE: Checking for deleted files/folders
+VERBOSE: Checking TeardownM\info.txt
+VERBOSE: Checking TeardownM\main.lua
+VERBOSE: Checking TeardownM\TDM.lua
+DEBUG: Copying Lua Mods
+VERBOSE: Copy Lua | TeardownM\info.txt
+VERBOSE: Copy Lua | TeardownM\main.lua
+VERBOSE: Copy Lua | TeardownM\TDM.lua
+DEBUG: No Files Needed to be Copied
+**********************
+PowerShell transcript end
+End time: 20220424032805
+**********************
