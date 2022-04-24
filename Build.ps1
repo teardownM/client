@@ -6,6 +6,25 @@ $RunSledge = $false
 $NBR = $false
 $Log = $false
 
+function Write-Info($Message) {
+    Write-Host "[Info] $Message" -ForegroundColor Cyan
+}
+
+function Write-Error($Message) {
+    Write-Host "[Error] $Message (Exiting)" -ForegroundColor Red
+    exit
+}
+
+function Write-Debug($Message) {
+    if ($DebugPreference -ne "Continue") { return }
+    Write-Host "[Debug] $Message" -ForegroundColor Green
+}
+
+function Write-Verbose($Message) {
+    if ($VerbosePreference -ne "Continue") { return }
+    Write-Host "[Verbose] $Message" -ForegroundColor Yellow
+}
+
 foreach($Argument in $args) {
     if($Argument -eq "-Help") {
         Write-Host "
@@ -66,25 +85,22 @@ Write-Verbose("Run Sledge: $RunSledge")
 $SledgeDir = $Env:SLEDGE_ROOT_DIR
 Write-Verbose("Getting Sledge Directory")
 if ( $SledgeDir.Length -eq 0 ) {
-    Write-Host("[Error] SLEDGE_ROOT_DIR is Invalid")
-    return
+    Write-Error("SLEDGE_ROOT_DIR is Invalid")
 }
 
 Write-Verbose("Checking for Sledge.exe and mods folder")
 if (-not(Test-Path -Path "$SledgeDir\\sledge.exe" -PathType Leaf) -or -not(Test-Path -Path "$SledgeDir\\mods" -PathType Container)) {
-    Write-Host("[Error] Unable to locate { sledge.exe || mods }")
-    return
+    Write-Error("Unable to locate { sledge.exe || mods }")
 }
 
 Write-Verbose("Checking for bin\sledgelib.dll")
 if (-not(Test-Path -Path "$SledgeDir\bin\sledgelib.dll" -PathType Leaf)) {
-    Write-Host("[Error] Unable to locate `"$SledgeDir/bin/sledgelib.dll`", sledge must have failed copying it")
-    return
+    Write-Error("Unable to locate `"$SledgeDir/bin/sledgelib.dll`", sledge must have failed copying it")
 }
 
-$SledgeDependencyDir = "$SledgeDir\mods\TeardownM\dependencies"
+$SledgeDependencyDir = "$SledgeDir\mods\TeardownM\Dependencies"
 $TeardownMDir = "$((Get-Item .).FullName)\TeardownM"
-$TeardownMDeps = "$TeardownMDir\dep\"
+$TeardownMDeps = "$TeardownMDir\Dependencies\"
 
 Write-Debug "SledgeDir: $SledgeDir"
 Write-Debug "TeardownM Dir: $TeardownMDir"
@@ -93,13 +109,13 @@ Write-Debug "TeardownM Dep Dir: $SledgeDependencyDir"
 # Check if mod dependency directory exists
 Write-Verbose("Checking for TeardownM dependencies")
 if (-not(Test-Path -Path $TeardownMDeps -PathType Container)) {
-    Write-Host("[Error] Unable to locate $TeardownMDeps")
+    Write-Error("Unable to locate $TeardownMDeps")
 }
 
-Write-Verbose("Checking for sledge/mods/TeardownM/dependencies")
+Write-Verbose("Checking for sledge/mods/TeardownM/Dependencies")
 if (-not(Test-Path -Path $SledgeDependencyDir -PathType Container)) {
     New-Item -Path $SledgeDependencyDir -ItemType Directory
-    Write-Host("Creating TeardownM Directory in sledge/mods")
+    Write-Info("Creating TeardownM Directory in sledge/mods")
 }
 
 # Check if the file has been deleted
@@ -107,7 +123,7 @@ Write-Debug("Checking for deleted dpendencies")
 $Dependencies = Get-ChildItem -Path $SledgeDependencyDir -Filter *.dll
 foreach ($File in $Dependencies) {
     if (-not(Test-Path -Path "$TeardownMDeps\\$($File.Name)" -PathType Leaf)) {
-        Write-Host("Deleteing $($File.Name) (No longer exists)")
+        Write-Info("Deleteing $($File.Name) (No longer exists)")
         Remove-Item -Path "$SledgeDependencyDir\\$($File.Name)" -Force
     }
 }
@@ -122,7 +138,7 @@ foreach($File in $RequiredDependencies) {
     # Copy the file if it doesn't exist
     if (-not(Test-Path -Path "$SledgeDependencyDir\\$($File.Name)" -PathType Leaf)) {
         Copy-Item -Path $TeardownMDeps\\$($File.Name) -Destination $SledgeDependencyDir\\$($File.Name) -Force
-        Write-Host("Copying $($File.Name)")
+        Write-Info("Copying $($File.Name)")
         $CopiedDependencies += 1
     }
 
@@ -131,15 +147,15 @@ foreach($File in $RequiredDependencies) {
     $SledgeFileHash = Get-FileHash -Path "$SledgeDependencyDir/$($File.Name)" -Algorithm SHA256
     if ($RequiredFileHash.Hash -ne $SledgeFileHash.Hash) {
         Copy-Item -Path $TeardownMDeps\\$($File.Name) -Destination $SledgeDependencyDir\\$($File.Name) -Force
-        Write-Host("Copying $($File.Name) (New Hash)")
+        Write-Info("Copying $($File.Name) (New Hash)")
         $CopiedDependencies += 1
     }
 }
 
 if ($CopiedDependencies -ne 0) {
-    Write-Host("Copied $CopiedDependencies Dependencies")
+    Write-Info("Copied $(if ($CopiedDependencies -eq 1) { "1 Dependency" } else { $CopiedDependencies.ToString() + " Dependencies" })")
 } else {
-    Write-Debug("No Dependencies Needed to be Copied")
+    Write-Info("No new dependencies found")
 }
 
 function GetGamePath([string]$GameName) {
@@ -166,7 +182,7 @@ function GetGamePath([string]$GameName) {
                 }
             }
         } else {
-            Write-Host("Unable to locate $SteamPath\steamapps\libraryfolders.vdf Path")
+            Write-Error("Unable to locate $SteamPath\steamapps\libraryfolders.vdf Path")
             return $false
         }
     }
@@ -175,14 +191,13 @@ function GetGamePath([string]$GameName) {
 Write-Verbose("Getting Game Path")
 $TeardownPath = GetGamePath("Teardown")
 if ($TeardownPath -eq $false) {
-    Write-Host("[Error] Unable to locate game")
-    return
+    Write-Error("Unable to locate game")
 }
 
 Write-Debug("Teardown Path: $TeardownPath")
 
 $TeardownMMods = @()
-$Directories = Get-ChildItem -Path $TeardownMDir\lua |Where-Object {$_.PSIsContainer}
+$Directories = Get-ChildItem -Path $TeardownMDir\Mods |Where-Object {$_.PSIsContainer}
 foreach ($Dir in $Directories) {
     $TeardownMMods += $Dir;
 }
@@ -209,22 +224,22 @@ foreach($File in $Files) {
     foreach ($Dir in $Directories) {
         # Remove everything before ModName
         $RelativeDir = $Dir.FullName.Substring($TeardownPath.Length + 6)
-        if (-not(Test-Path -Path "$TeardownMDir\lua\$RelativeDir" -PathType Container)) {
-            Write-Host("Deleting $RelativeDir (No longer exists)")
+        if (-not(Test-Path -Path "$TeardownMDir\Mods\$RelativeDir" -PathType Container)) {
+            Write-Info("Deleting $RelativeDir (No longer exists)")
             Remove-Item -Path $Dir -Recurse -Force
         }
     }
 
     $Filepath = "$ModName\$($File.Name)"
     Write-Verbose("Checking $Filepath")
-    if (-not(Test-Path -Path "$TeardownMDir\lua\$Filepath" -PathType Leaf)) {
-        Write-Host("Deleting File $Filepath (No longer exists)")
+    if (-not(Test-Path -Path "$TeardownMDir\Mods\$Filepath" -PathType Leaf)) {
+        Write-Info("Deleting File $Filepath (No longer exists)")
         Remove-Item -Path $File -Force
     }
 }
 
 Write-Debug("Copying Lua Mods")
-$Files = Get-ChildItem -Path $TeardownMDir\lua -Recurse -Force
+$Files = Get-ChildItem -Path $TeardownMDir\Mods -Recurse -Force
 $CopiedFiles = 0
 foreach($File in $Files) {
     $DirName = $File.Directory
@@ -239,13 +254,13 @@ foreach($File in $Files) {
     if (-not(Test-Path -Path "$TeardownPath\mods\$CleanName" -PathType Container)) {
         Write-Debug("Creating Directory: $TeardownPath\mods\$CleanName")
         New-Item -Path "$TeardownPath\mods\$CleanName" -ItemType Directory
-        Write-Host("Creating $CleanName Directory in lua")
+        Write-Info("Creating $CleanName Directory in lua")
     }
 
     # Copy the file if it doesn't exist
     if (-not(Test-Path -Path "$TeardownPath\mods\$CleanName\$($File.Name)" -PathType Leaf)) {
         Copy-Item -Path $File -Destination "$TeardownPath\mods\$CleanName" -Force
-        Write-Host("Copying $($File.Name)")
+        Write-Info("Copying $($File.Name)")
         $CopiedFiles += 1
     }
 
@@ -254,15 +269,15 @@ foreach($File in $Files) {
     $SledgeFileHash = Get-FileHash -Path "$TeardownPath\mods\$CleanName\$($File.Name)" -Algorithm SHA256
     if ($RequiredFileHash.Hash -ne $SledgeFileHash.Hash) {
         Copy-Item -Path $File -Destination "$TeardownPath\mods\$CleanName" -Force
-        Write-Host("Copying $($File.Name) (New Hash)")
+        Write-Info("Copying $($File.Name) (New Hash)")
         $CopiedFiles += 1
     }
 }
 
 if ($CopiedFiles -ne 0) {
-    Write-Host("Copied $CopiedFiles Files")
+    Write-Info("Copied $(if ($CopiedFiles -eq 1) { "1 File" } else { $CopiedFiles.ToString() + " Files" })")
 } else {
-    Write-Debug("No Files Needed to be Copied")
+    Write-Info("No new mod files to copy")
 }
 
 if ($NBR -eq $true) {
@@ -276,16 +291,72 @@ if ($NBR -eq $true) {
 
 $Output = ""
 
-#Build Mod
-Write-Host("Building Mod")
-Invoke-Command -OutBuffer $Output  -ScriptBlock {
-    dotnet build "$((Get-Item .).FullName)\TeardownM" /p:Configuration=Release /p:Platform="x64" | Out-Host
+# Build Mod
+Write-Info("Building TeardownM") -ForegroundColor Cyan
+$Errors = @()
+$Warnings = @()
+$TimeElapsedString = ""
+Invoke-Command -ScriptBlock {
+    $Output = dotnet build "$((Get-Item .).FullName)\TeardownM" --verbosity q /p:Configuration=$BuildConfiguration /p:Platform="x64" | Out-String
+
+    if ($Output.Contains("Build FAILED.")) {
+        $Output = $Output.Replace("Build FAILED.", "")
+    }
+
+    foreach ($Line in $Output -Split "`r`n") {
+        $Line = $Line -Replace '\[[A-Z]:.*(?=]).'
+
+        if ($Line.Contains("error")) {
+            $Found = $false
+            foreach ($Error in $Errors) {
+                if ($Error -eq $Line) {
+                    $Found = $true
+                    break
+                }
+            }
+
+            if ($Found -eq $false) {
+                $Errors += $Line
+            }
+        } elseif ($Line.Contains("warning")) {
+            $Found = $false
+            foreach ($Warning in $Warnings) {
+                if ($Warning -eq $Line) {
+                    $Found = $true
+                    break
+                }
+            }
+
+            if ($Found -eq $false) {
+                $Warnings += $Line
+            }
+        } elseif ($Line.Contains("Time Elapsed")) {
+            $TimeElapsedString = $Line
+        }
+    }
+
+    if ($Warnings.Length -ne 0) {
+        foreach ($Warning in $Warnings) {
+            Write-Host("[Compilation] $Warning") -ForegroundColor Yellow
+        }
+    }
+
+    if ($Errors.Length -ne 0) {
+        Write-Host("[Error] Failed Building") -ForegroundColor Red
+        foreach ($Error in $Errors) {
+            Write-Host("[Compilation] $Error") -ForegroundColor Red
+        }
+
+        exit
+    }
+
+    Write-Host("[Success] TeardownM Successfully Built ($TimeElapsedString)") -ForegroundColor Green
 }
 
-Copy-Item -Path "$((Get-Item .).FullName)\TeardownM\bin\x64\$BuildConfiguration\net6.0\TeardownM.dll" -Destination "$SledgeDir\mods\TeardownM.dll" -Force
+Copy-Item -Path "$((Get-Item .).FullName)\TeardownM\Build\$BuildConfiguration\net6.0\TeardownM.dll" -Destination "$SledgeDir\mods\TeardownM.dll" -Force
 
 if ($RunSledge -eq $true) {
-    Write-Host("Starting Sledge")
+    Write-Info("Starting Sledge")
     Start-Process -FilePath "$SledgeDir\sledge.exe" -WorkingDirectory $SledgeDir
 }
 

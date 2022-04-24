@@ -1,0 +1,16 @@
+D:\Development\Github\TeardownM\client\TeardownM\Build\Release\net6.0\TeardownM.deps.json
+D:\Development\Github\TeardownM\client\TeardownM\Build\Release\net6.0\TeardownM.dll
+D:\Development\Github\TeardownM\client\TeardownM\Build\Release\net6.0\TeardownM.pdb
+D:\Development\Github\TeardownM\client\TeardownM\Build\Release\net6.0\DiscordRPC.dll
+D:\Development\Github\TeardownM\client\TeardownM\Build\Release\net6.0\Nakama.dll
+D:\Development\Github\TeardownM\client\TeardownM\Build\Release\net6.0\Newtonsoft.Json.dll
+D:\Development\Github\TeardownM\client\TeardownM\Build\Release\net6.0\sledgelib.dll
+D:\Development\Github\TeardownM\client\TeardownM\Build\Release\net6.0\sledgelib.pdb
+D:\Development\Github\TeardownM\client\TeardownM\Build\Intermediate\net6.0\TeardownM.csproj.AssemblyReference.cache
+D:\Development\Github\TeardownM\client\TeardownM\Build\Intermediate\net6.0\TeardownM.GeneratedMSBuildEditorConfig.editorconfig
+D:\Development\Github\TeardownM\client\TeardownM\Build\Intermediate\net6.0\TeardownM.AssemblyInfoInputs.cache
+D:\Development\Github\TeardownM\client\TeardownM\Build\Intermediate\net6.0\TeardownM.AssemblyInfo.cs
+D:\Development\Github\TeardownM\client\TeardownM\Build\Intermediate\net6.0\TeardownM.csproj.CoreCompileInputs.cache
+D:\Development\Github\TeardownM\client\TeardownM\Build\Intermediate\net6.0\TeardownM.csproj.CopyComplete
+D:\Development\Github\TeardownM\client\TeardownM\Build\Intermediate\net6.0\TeardownM.dll
+D:\Development\Github\TeardownM\client\TeardownM\Build\Intermediate\net6.0\TeardownM.pdb
