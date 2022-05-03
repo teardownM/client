@@ -13,7 +13,7 @@ public static class Network {
         m_sAddress = sAddress;
         m_iPort = iPort;
 
-        Client.m_Connection = new Nakama.Client("http", sAddress, iPort, "defaultKey");
+        Client.m_Connection = new Nakama.Client("http", sAddress, iPort, "defaultkey");
         Client.m_Connection.Timeout = 1;
 
         if (Client.m_Connection == null) {
@@ -21,11 +21,14 @@ public static class Network {
             return await Task.FromResult<ISession>(null!);
         }
 
+        Log.Verbose("Device ID: {0}", Client.m_DeviceID);
+
         try {
             Client.m_Session = await Client.m_Connection.AuthenticateDeviceAsync(Client.m_DeviceID, Client.m_DeviceID);
             Log.Verbose("Successfully authenticated");
             Log.General("Your ID: {0}", Client.m_Session.UserId);
         } catch (Exception) {
+            Log.Error("Failed to authenticate");
             return await Task.FromResult<ISession>(null!);
         }
 

@@ -15,8 +15,8 @@ public class LuaFunctions {
     }
 
     [LuaFunction("TDM_GetGameState")]
-    public static void TDM_GetGameState() {
-        
+    public static int TDM_GetGameState() {
+        return 0;
     }
 
     [LuaFunction("TDM_SetGameState")]
@@ -28,23 +28,23 @@ public class LuaFunctions {
     /*         Player        */
     /**************************/
     [LuaFunction("TDM_GetPlayerName")]
-    public static void TDM_GetPlayerName(int iUserID) {
-        
+    public static string TDM_GetPlayerName(int iUserID) {
+        return "";
     }
 
     [LuaFunction("TDM_GetPlayerSteamID")]
-    public static void TDM_GetPlayerSteamID(int iUserID) {
-        
+    public static string TDM_GetPlayerSteamID(int iUserID) {
+        return "";
     }
 
     [LuaFunction("TDM_GetPlayers")]
-    public static void TDM_GetPlayers() { // Return type should be a table/array (returns a list of id's)
-        
+    public static string TDM_GetPlayers() { // Return type should be a table/array (returns a list of id's)
+        return "";
     }
 
     [LuaFunction("TDM_GetPlayerCount")]
-    public static void TDM_GetPlayerCount() {
-        
+    public static int TDM_GetPlayerCount() {
+        return 0;
     }
 
     [LuaFunction("TDM_KickPlayer")]
@@ -66,7 +66,8 @@ public class LuaFunctions {
     /*         Server        */
     /**************************/
     [LuaFunction("TDM_ConnectToServer")]
-    public static void TDM_ConnectToServer(string sAddress, int iPort) {
+    public static void TDM_ConnectToServer() {
+        // Log.General("Connecting to server");
         // Network.Connect(sAddress, iPort);
     }
 
@@ -76,17 +77,17 @@ public class LuaFunctions {
     }
 
     [LuaFunction("TDM_GetServerName")]
-    public static void TDM_GetServerName() {
-        
+    public static string TDM_GetServerName() {
+        return "";
     }
 
     [LuaFunction("TDM_GetServerIP")]
-    public static void TDM_GetServerIP() {
-        
+    public static string TDM_GetServerIP() {
+        return "";
     }
 
     [LuaFunction("TDM_GetServerPort")]
-    public static void TDM_GetServerPort() {
-        
+    public static int TDM_GetServerPort() {
+        return 0;
     }
 }

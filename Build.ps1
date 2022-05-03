@@ -207,8 +207,12 @@ Write-Verbose("Checking for deleted files/folders")
 $Files = Get-ChildItem -Path $TeardownPath\mods -Recurse -Force -Include "*"
 foreach($File in $Files) {
     $DirName = $File.Name
-    if ($DirName.Length -eq 0 -or -not $File.DirectoryName) { continue }
-    $ModName = $File.DirectoryName.Substring($TeardownMDir.Length + 12)
+    if ($DirName.Length -eq 0 -or -not $File.DirectoryName -or $File -eq "") { continue }
+    $ModName = $File.DirectoryName.Substring($TeardownMDir.Length + 7)
+    if ($ModName.Length -ge 5) {
+        $ModName = $ModName.Substring(5)
+    }
+    # Write-Debug($ModName)
 
     $FoundMod = $false
     foreach ($Mod in $TeardownMMods) {
@@ -297,7 +301,7 @@ $Errors = @()
 $Warnings = @()
 $TimeElapsedString = ""
 Invoke-Command -ScriptBlock {
-    $Output = dotnet build "$((Get-Item .).FullName)\TeardownM" --verbosity q /p:Configuration=$BuildConfiguration /p:Platform="x64" | Out-String
+    $Output = dotnet build "$TeardownMDir\Source" --verbosity q /p:Configuration=$BuildConfiguration /p:Platform="x64" | Out-String
 
     if ($Output.Contains("Build FAILED.")) {
         $Output = $Output.Replace("Build FAILED.", "")

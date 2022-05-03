@@ -7,8 +7,8 @@
     <PlatformTarget>x64</PlatformTarget>
     <ProduceReferenceAssembly>False</ProduceReferenceAssembly>
     <AssemblyName>TeardownM</AssemblyName>
-    <IntermediateOutputPath>Build\Intermediate\</IntermediateOutputPath>
-    <OutputPath>Build\$(Configuration)</OutputPath>
+    <IntermediateOutputPath>..\Build\Intermediate\</IntermediateOutputPath>
+    <OutputPath>..\Build\$(Configuration)</OutputPath>
   </PropertyGroup>
 
   <ItemGroup>
@@ -16,13 +16,13 @@
       <HintPath>$(SLEDGE_ROOT_DIR)\bin\sledgelib.dll</HintPath>
     </Reference>
     <Reference Include="Nakama">
-      <HintPath>dep/Nakama.dll</HintPath>
+      <HintPath>..\Dependencies\Nakama.dll</HintPath>
     </Reference>
     <Reference Include="DiscordRPC">
-      <HintPath>dep/DiscordRPC.dll</HintPath>
+      <HintPath>..\Dependencies\DiscordRPC.dll</HintPath>
     </Reference>
     <Reference Include="Newtonsoft.JSON">
-      <HintPath>dep/Newtonsoft.Json.dll</HintPath>
+      <HintPath>..\Dependencies\Newtonsoft.Json.dll</HintPath>
     </Reference>
   </ItemGroup>
 
