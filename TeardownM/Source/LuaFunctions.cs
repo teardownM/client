@@ -1,9 +1,33 @@
 using SledgeLib;
+using Nakama;
 
 public class LuaFunctions {
     /**************************/
+    /*    Logging Functions   */
+    /**************************/
+    [LuaFunction("LogVerbose")]
+    public static void LogVerbose(string message) {
+        Log.Verbose(message);
+    }
+
+    [LuaFunction("LogGeneral")]
+    public static void LogGeneral(string message) {
+        Log.General(message);
+    }
+
+    [LuaFunction("LogWarning")]
+    public static void LogWarning(string message) {
+        Log.Warning(message);
+    }
+
+    /**************************/
     /*      Miscellaneous     */
     /**************************/
+    [LuaFunction("TestFunction")]
+    public static void TestFunction() {
+        Log.Verbose("TestFunction() called");
+    }
+
     [LuaFunction("TDM_SetRichPresence")]
     public static void TDM_SetRichPresence(int iState) {
         Discord.SetPresence((Discord.EDiscordState)iState);
@@ -39,7 +63,7 @@ public class LuaFunctions {
 
     [LuaFunction("TDM_GetPlayers")]
     public static string TDM_GetPlayers() { // Return type should be a table/array (returns a list of id's)
-        return "";
+        return "None";
     }
 
     [LuaFunction("TDM_GetPlayerCount")]
@@ -66,28 +90,39 @@ public class LuaFunctions {
     /*         Server        */
     /**************************/
     [LuaFunction("TDM_ConnectToServer")]
-    public static void TDM_ConnectToServer() {
-        // Log.General("Connecting to server");
-        // Network.Connect(sAddress, iPort);
+    public static async void TDM_ConnectToServer(string sAddress, int iPort) {
+        Log.General("Connecting to server {0}:{1}", sAddress, iPort);
+        
+        ISession session = await Network.Connect("127.0.0.1", 7350);
+        if (session == null) {
+            Log.Error("Failed to connect to server");
+        } else {
+            Log.General("Connected to server");
+        }
     }
 
     [LuaFunction("TDM_DisconnectFromServer")]
     public static void TDM_DisconnectFromServer() {
-        // Network.Disconnect();
+        Network.Disconnect();
     }
 
     [LuaFunction("TDM_GetServerName")]
     public static string TDM_GetServerName() {
-        return "";
+        return "Server";
     }
 
     [LuaFunction("TDM_GetServerIP")]
     public static string TDM_GetServerIP() {
-        return "";
+        return "127.0.0.1";
     }
 
     [LuaFunction("TDM_GetServerPort")]
     public static int TDM_GetServerPort() {
-        return 0;
+        return 7350;
+    }
+
+    [LuaFunction("TDM_GetServerMap")]
+    public static string TDM_GetServerMap() {
+        return "Map";
     }
 }

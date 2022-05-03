@@ -1,7 +1,6 @@
 // Documentation: https://github.com/44lr/sledge/wiki/API-Documentation
 
 using SledgeLib;
-using Nakama;
 
 public class TeardownM : ISledgeMod {
     public string GetName() { return "TeardownM"; }
@@ -11,7 +10,7 @@ public class TeardownM : ISledgeMod {
 
     public EGameState GameState;
 
-    public async void Load() {
+    public void Load() {
         if (!Discord.Initialize()) {
             Log.Error("Failed to initialize Discord client");
             return;
@@ -21,14 +20,6 @@ public class TeardownM : ISledgeMod {
 
         /* The following is temporary code */
         Client.m_DeviceID = Guid.NewGuid().ToString();
-
-        Log.General("Connecting to server");
-        ISession session = await Network.Connect("127.0.0.1", 7350);
-        if (session == null) {
-            Log.Error("Failed to connect to server");
-        } else {
-            Log.General("Connected to server");
-        }
     }
 
     public void Unload() {
