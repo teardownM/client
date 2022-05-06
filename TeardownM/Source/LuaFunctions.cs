@@ -23,11 +23,6 @@ public class LuaFunctions {
     /**************************/
     /*      Miscellaneous     */
     /**************************/
-    [LuaFunction("TestFunction")]
-    public static void TestFunction() {
-        Log.Verbose("TestFunction() called");
-    }
-
     [LuaFunction("TDM_SetRichPresence")]
     public static void TDM_SetRichPresence(int iState) {
         Discord.SetPresence((Discord.EDiscordState)iState);
@@ -40,12 +35,12 @@ public class LuaFunctions {
 
     [LuaFunction("TDM_GetGameState")]
     public static int TDM_GetGameState() {
-        return 0;
+        return ((int)Game.State);
     }
 
     [LuaFunction("TDM_SetGameState")]
     public static void TDM_SetGameState(int iState) {
-        
+        Game.State = (EGameState)iState;
     }
 
     /**************************/
@@ -53,37 +48,34 @@ public class LuaFunctions {
     /**************************/
     [LuaFunction("TDM_GetPlayerName")]
     public static string TDM_GetPlayerName(int iUserID) {
+        if (!Client.m_Connected)
+            return "";
+
         return "";
     }
 
     [LuaFunction("TDM_GetPlayerSteamID")]
     public static string TDM_GetPlayerSteamID(int iUserID) {
+        if (!Client.m_Connected)
+            return "";
+
         return "";
     }
 
     [LuaFunction("TDM_GetPlayers")]
     public static string TDM_GetPlayers() { // Return type should be a table/array (returns a list of id's)
+        if (!Client.m_Connected)
+            return "";
+
         return "None";
     }
 
     [LuaFunction("TDM_GetPlayerCount")]
     public static int TDM_GetPlayerCount() {
+        if (!Client.m_Connected)
+            return 0;
+
         return 0;
-    }
-
-    [LuaFunction("TDM_KickPlayer")]
-    public static void TDM_KickPlayer(int iUserID, string sReason) {
-
-    }
-
-    [LuaFunction("TDM_BanPlayer")]
-    public static void TDM_BanPlayer(int iUserID, int lTime, string sReason) {
-
-    }
-
-    [LuaFunction("TDM_SetPlayerHealth")]
-    public static void TDM_SetPlayerHealth(int iUserID, int iHealth) {
-
     }
 
     /**************************/
@@ -93,17 +85,24 @@ public class LuaFunctions {
     public static async void TDM_ConnectToServer(string sAddress, int iPort) {
         Log.General("Connecting to server {0}:{1}", sAddress, iPort);
         
-        ISession session = await Network.Connect("127.0.0.1", 7350);
+        ISession session = await Network.Connect(sAddress, iPort);
         if (session == null) {
-            Log.Error("Failed to connect to server");
+            Log.Error("Unable to reach server");
+            // Lua.Invoke("TDM_AddToast", "Failed to connect to server");
         } else {
             Log.General("Connected to server");
+            // Lua.Invoke("TDM_AddToast", "Successfully connected to server");
+            SledgeLib.Game.LoadLevel("hub0", "hub0", "hub0", "");
         }
     }
 
     [LuaFunction("TDM_DisconnectFromServer")]
     public static void TDM_DisconnectFromServer() {
+        if (!Client.m_Connected)
+            return;
+
         Network.Disconnect();
+        Game.State = EGameState.Menu;
     }
 
     [LuaFunction("TDM_GetServerName")]
@@ -113,16 +112,25 @@ public class LuaFunctions {
 
     [LuaFunction("TDM_GetServerIP")]
     public static string TDM_GetServerIP() {
-        return "127.0.0.1";
+        if (!Client.m_Connected)
+            return "";
+
+        return Network.m_sAddress;
     }
 
     [LuaFunction("TDM_GetServerPort")]
     public static int TDM_GetServerPort() {
-        return 7350;
+        if (!Client.m_Connected)
+            return 0;
+
+        return Network.m_iPort;
     }
 
     [LuaFunction("TDM_GetServerMap")]
     public static string TDM_GetServerMap() {
-        return "Map";
+        if (!Client.m_Connected)
+            return "";
+
+        return Network.m_sMap;
     }
 }
