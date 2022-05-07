@@ -2,14 +2,14 @@ using System.Runtime.InteropServices;
 using Microsoft.Win32.SafeHandles;
 
 public static class TeardownConsole {
-    static public void Initialize(bool alwaysCreateNewConsole = true) {
+    public static void Initialize(bool alwaysCreateNewConsole = true) {
         IntPtr hWnd = GetConsoleWindow();
         ShowWindow(hWnd, 0);
         FreeConsole();
 
         bool consoleAttached = true;
         if (alwaysCreateNewConsole
-            || (AttachConsole(ATTACH_PARRENT) == 0
+            || (AttachConsole(ATTACH_PARENT) == 0
             && Marshal.GetLastWin32Error() != ERROR_ACCESS_DENIED)) {
             consoleAttached = AllocConsole() != 0;
         }
@@ -26,7 +26,7 @@ public static class TeardownConsole {
     }
 
     private static void InitializeOutStream() {
-        var fs = CreateFileStream("CONOUT$", GENERIC_WRITE, FILE_SHARE_WRITE, FileAccess.Write);
+        FileStream? fs = CreateFileStream("CONOUT$", GENERIC_WRITE, FILE_SHARE_WRITE, FileAccess.Write);
         if (fs != null) {
             var writer = new StreamWriter(fs) { AutoFlush = true };
             Console.SetOut(writer);
@@ -35,7 +35,7 @@ public static class TeardownConsole {
     }
 
     private static void InitializeInStream() {
-        var fs = CreateFileStream("CONIN$", GENERIC_READ, FILE_SHARE_READ, FileAccess.Read);
+        FileStream? fs = CreateFileStream("CONIN$", GENERIC_READ, FILE_SHARE_READ, FileAccess.Read);
         if (fs != null) {
             Console.SetIn(new StreamReader(fs));
         }
@@ -84,5 +84,5 @@ public static class TeardownConsole {
     private const UInt32 FILE_ATTRIBUTE_NORMAL = 0x80;
     private const UInt32 ERROR_ACCESS_DENIED = 5;
 
-    private const UInt32 ATTACH_PARRENT = 0xFFFFFFFF;
+    private const UInt32 ATTACH_PARENT = 0xFFFFFFFF;
 }
