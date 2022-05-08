@@ -5,6 +5,11 @@ using TeardownM.Network;
 namespace TeardownM;
 
 public class LuaFunctions {
+    private static bool IsExternalMod() {
+        string sCaller = Lua.GetCaller();
+        return !(sCaller.Contains("mods/TeardownM/") || sCaller.Contains("data/ui/"));
+    }
+    
     /******************************************/
     /*************** Logging ****************/
     /******************************************/
@@ -28,6 +33,7 @@ public class LuaFunctions {
     /******************************************/
     [LuaFunction("TDM_SetRichPresence")]
     public static void TDM_SetRichPresence(int iState) {
+        if (IsExternalMod()) return;
         Discord.SetPresence((Discord.EDiscordState)iState);
     }
 
@@ -43,6 +49,7 @@ public class LuaFunctions {
 
     [LuaFunction("TDM_SetGameState")]
     public static void TDM_SetGameState(int iState) {
+        if (IsExternalMod()) return;
         Game.State = (EGameState)iState;
     }
 
@@ -86,6 +93,8 @@ public class LuaFunctions {
     /******************************************/
     [LuaFunction("TDM_ConnectToServer")]
     public static async void TDM_ConnectToServer(string sAddress, int iPort) {
+        if (IsExternalMod()) return;
+        
         Log.General("Connecting to server {0}:{1}", sAddress, iPort);
         
         Network.Network.Session = await Network.Network.Connect(sAddress, iPort);
@@ -101,8 +110,7 @@ public class LuaFunctions {
 
     [LuaFunction("TDM_DisconnectFromServer")]
     public static void TDM_DisconnectFromServer() {
-        if (!Network.Network.bConnected)
-            return;
+        if (!Network.Network.bConnected || IsExternalMod()) return;
 
         Network.Network.Disconnect();
         Game.State = EGameState.Menu;
