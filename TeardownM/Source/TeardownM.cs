@@ -9,21 +9,10 @@ public class TeardownM : ISledgeMod {
     /******************************************/
     /**************** Manifest ****************/
     /******************************************/
-    public string GetName() {
-        return "TeardownM";
-    }
-
-    public string GetDescription() {
-        return "A Multiplayer Mod for Teardown";
-    }
-
-    public string GetVersion() {
-        return "0.0.1";
-    }
-
-    public string GetAuthor() {
-        return "github.com/teardownM";
-    }
+    public string GetName() { return "TeardownM"; }
+    public string GetDescription() { return "A Multiplayer Mod for Teardown"; }
+    public string GetVersion() { return "0.0.1"; }
+    public string GetAuthor() { return "github.com/teardownM"; }
 
     /******************************************/
     /*************** Variables ****************/
