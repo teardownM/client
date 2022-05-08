@@ -23,10 +23,10 @@ public class Log {
     /******************************************/
     /*************** Functions ****************/
     /******************************************/
-    private static void _Log(ELogType eType, Assembly Caller, string sFormat, params object[] oArgs) {
+    private static void _Log(ELogType eType, Assembly aCaller, string sFormat, params object[] oArgs) {
         string sCallingAssembly = "unknown";
-        string? sAssemblyName = Caller.GetName().Name;
-        if (Caller != null && sAssemblyName != null)
+        string? sAssemblyName = aCaller.GetName().Name;
+        if (aCaller != null && sAssemblyName != null)
             sCallingAssembly = sAssemblyName;
 
         string sMsg;
