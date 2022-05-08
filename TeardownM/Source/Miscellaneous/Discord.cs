@@ -1,5 +1,6 @@
-using SledgeLib;
 using DiscordRPC;
+
+namespace TeardownM.Miscellaneous;
 
 public static class Discord {
     public enum EDiscordState : uint {

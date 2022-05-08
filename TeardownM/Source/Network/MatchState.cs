@@ -1,5 +1,6 @@
 using Nakama;
-using SledgeLib;
+
+namespace TeardownM.Network;
 
 public static class MatchState {
     private enum OPCODE : Int64 {
@@ -35,19 +36,19 @@ public static class MatchState {
     }
 
     public static void OnMatchPresence(IMatchPresenceEvent Presence) {
-        if (Client.m_Session == null)
+        if (!Network.bConnected || Network.Session == null)
             return;
 
         if (Presence.Joins.Any()) { // Player joined
             foreach (IUserPresence user in Presence.Joins) {
-                if (user.UserId == Client.m_Session.UserId)
+                if (user.UserId == Network.Session.UserId)
                     continue;
 
                 Log.Verbose("Player {0} joined", user.UserId);
             }
         } else if (Presence.Leaves.Any()) { // Player left
             foreach (IUserPresence user in Presence.Leaves) {
-                if (user.UserId == Client.m_Session.UserId)
+                if (user.UserId == Network.Session.UserId)
                     continue;
 
                 Log.Verbose("Player {0} left", user.UserId);

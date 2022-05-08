@@ -1,5 +1,7 @@
 using System.Runtime.InteropServices;
 
+namespace TeardownM.Miscellaneous;
+
 public static class Keyboard {
     [DllImport("user32.dll")]
     public static extern short GetAsyncKeyState(Int32 vKey);

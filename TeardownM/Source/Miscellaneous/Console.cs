@@ -1,6 +1,8 @@
 using System.Runtime.InteropServices;
 using Microsoft.Win32.SafeHandles;
 
+namespace TeardownM.Miscellaneous;
+
 public static class TeardownConsole {
     public static void Initialize(bool alwaysCreateNewConsole = true) {
         IntPtr hWnd = GetConsoleWindow();

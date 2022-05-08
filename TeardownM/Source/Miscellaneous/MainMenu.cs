@@ -1,3 +1,5 @@
+namespace TeardownM.Miscellaneous;
+
 public static class MainMenu {
     #region MenuData
 	private static byte[] m_NewMenuData = {

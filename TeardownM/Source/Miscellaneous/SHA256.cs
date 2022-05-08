@@ -1,5 +1,7 @@
 using System.Text;
 
+namespace TeardownM.Miscellaneous;
+
 public class Sha256 {
     static void DBL_INT_ADD(ref uint a, ref uint b, uint c) { if (a > 0xffffffff - c) ++b; a += c; }
     static uint ROTLEFT(uint a, byte b) { return ((a << b) | (a >> (32 - b))); }
