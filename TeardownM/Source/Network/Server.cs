@@ -39,5 +39,5 @@ public class Server {
     public static string? Map { get; set; }
 
     [JsonProperty("mods")]
-    public static Mods? Mods { get; set; }
+    public static Mods[]? Mods { get; set; }
 }
