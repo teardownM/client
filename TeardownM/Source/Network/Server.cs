@@ -31,6 +31,9 @@ public class Server {
 
     [JsonProperty("gamemode")]
     public static string? Gamemode { get; set; }
+    
+    [JsonProperty("server_name")]
+    public static string? ServerName { get; set; }
 
     [JsonProperty("map")]
     public static string? Map { get; set; }
