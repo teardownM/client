@@ -54,8 +54,9 @@ public class TeardownM : ISledgeMod {
         }
 
         // Make sure the required version is met
-        if (Teardown.GetGameVersion() != sRequiredVersion) {
-            Log.Error("Version {0} != {1}", Teardown.GetGameVersion(), sRequiredVersion);
+        string sVersion = Teardown.GetGameVersion();
+        if (sVersion != sRequiredVersion) {
+            Log.Error("Version {0} != {1}", Teardown.GetGameVersion(), sVersion);
             return;
         }
 
