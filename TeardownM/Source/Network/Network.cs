@@ -1,74 +1,85 @@
-using SledgeLib;
 using Nakama;
 using Newtonsoft.Json;
+using TeardownM.Miscellaneous;
+
+namespace TeardownM.Network;
 
 public static class Network {
-    public static string m_sAddress = "";
-    public static int m_iPort = 0;
-    public static string m_sMap = "";
-    public static int m_ClientCount = 0;
+    public static string sAddress = "";
+    public static int iPort = 0;
+
+    public static bool bConnected { get; set; }
+    public static ISession? Session = null;
+    public static IClient? Connection = null;
+    public static ISocket? Socket = null;
 
     public static async Task<ISession> Connect(string sAddress, int iPort) {
         // Disconnect if we're already connected
-        if (Server.MatchID != null)
-            Disconnect();
+        if (bConnected) Disconnect();
 
-        m_sAddress = sAddress;
-        m_iPort = iPort;
+        Network.sAddress = sAddress;
+        Network.iPort = iPort;
+
+        ISession? session = null;
 
         // Connect to Nakama server
-        Client.m_Connection = new Nakama.Client("http", sAddress, iPort, "defaultkey");
-        Client.m_Connection.Timeout = 1;
+        Connection = new Nakama.Client("http", sAddress, iPort, "defaultkey");
+        Connection.Timeout = 4;
 
-        if (Client.m_Connection == null) {
+        if (Connection == null) {
             Log.Error("Failed to create connection");
             return await Task.FromResult<ISession>(null!);
         }
 
         try {
-            Client.m_Session = await Client.m_Connection.AuthenticateDeviceAsync(Client.m_DeviceID, Client.m_DeviceID);
+            session = await Connection.AuthenticateDeviceAsync(Client.m_DeviceID, Client.m_DeviceID);
             Log.Verbose("Successfully authenticated");
-            Log.General("Your ID: {0}", Client.m_Session.UserId);
+            Log.General("Your ID: {0}", session.UserId);
         } catch (Exception) {
             Log.Error("Failed to authenticate");
             return await Task.FromResult<ISession>(null!);
         }
 
-        // Connect to the socket
-        Client.m_Socket = Socket.From(Client.m_Connection);
-        await Client.m_Socket.ConnectAsync(Client.m_Session);
+        if (session.HasExpired(DateTime.UtcNow.AddSeconds(1))) {
+            Log.Error("Failed to create session");
+            return await Task.FromResult<ISession>(null!);
+        }
 
-        Client.m_Socket.ReceivedMatchState += MatchState.OnMatchState;
-        Client.m_Socket.ReceivedMatchPresence += MatchState.OnMatchPresence;
+        Log.Verbose("Successfully authenticated");
+        Log.General("Your ID: {0}", session.UserId);
 
-        IApiRpc response = await Client.m_Connection.RpcAsync(Client.m_Session, "rpc_get_matches");
+        Task<ISocket> socket = NetSocket.CreateSocket(Connection, session);
+        Socket = await socket;
+
+        IApiRpc response = await Connection.RpcAsync(session, "rpc_get_matches");
         JsonConvert.DeserializeObject<Server>(response.Payload.Substring(1, response.Payload.Length - 2));
 
-        IMatch match = await Client.m_Socket.JoinMatchAsync(Server.MatchID);
+        IMatch match = await Socket.JoinMatchAsync(Server.MatchID);
+        Log.Verbose("Joined match {0}", match.Id);
 
-        return Client.m_Session;
+        bConnected = true;
+
+        return session;
     }
 
     public static async void Disconnect() {
         // Don't disconnect if we're not connected
-        if (Client.m_Socket == null || !Client.m_Connected)
-            return;
+        if (Socket == null || !bConnected) return;
 
         // Leave the match
         if (Server.MatchID != null) {
-            await Client.m_Socket.LeaveMatchAsync(Server.MatchID);
+            await Socket.LeaveMatchAsync(Server.MatchID);
             Log.Verbose("Successfully left match {0}", Server.MatchID!);
         }
 
         Log.General("Disconnected from server");
-        Client.m_Connected = false;
+        bConnected = false;
 
         Discord.SetPresence(Discord.EDiscordState.MainMenu);
 
-        m_iPort = 0;
-        m_sAddress = "";
-        m_sMap = "";
+        iPort = 0;
+        sAddress = "";
 
-        await Client.m_Socket.CloseAsync();
+        await Socket.CloseAsync();
     }
 }
