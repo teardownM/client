@@ -1,10 +1,19 @@
 using Newtonsoft.Json;
 
-public class Server {
-    public class ServerLabel {
-        public string? value { get; set; }
-    }
+namespace TeardownM.Network;
 
+public class Label {
+    protected string? value { get; set; }
+}
+
+public class Mods {
+    protected string? download_url { get; set; }
+    protected string? name { get; set; }
+    protected string? version { get; set; }
+    protected string? is_workshop { get; set; }
+}
+
+public class Server {
     [JsonProperty("match_id")]
     public static string? MatchID { get; set; }
 
@@ -12,7 +21,7 @@ public class Server {
     public static bool? Authoritative { get; set; }
 
     [JsonProperty("label")]
-    public static ServerLabel? Label { get; set; }
+    public static Label? Label { get; set; }
 
     [JsonProperty("tick_rate")]
     public static int TickRate { get; set; } = 24; // ! Hardcoded
@@ -20,6 +29,12 @@ public class Server {
     [JsonProperty("handler_name")]
     public static string? HandlerName { get; set; }
 
-    public static string Gamemode = "Sandbox";
-    public static string Map = "Villa Gordon";
+    [JsonProperty("gamemode")]
+    public static string? Gamemode { get; set; }
+
+    [JsonProperty("map")]
+    public static string? Map { get; set; }
+
+    [JsonProperty("mods")]
+    public static Mods? Mods { get; set; }
 }
