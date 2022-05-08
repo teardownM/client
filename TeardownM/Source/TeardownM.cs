@@ -1,15 +1,29 @@
 using SledgeLib;
-using System.Reflection;
-using static Keyboard;
+using TeardownM.Miscellaneous;
+using static TeardownM.Miscellaneous.Keyboard;
+using TeardownM.Network;
+
+namespace TeardownM;
 
 public class TeardownM : ISledgeMod {
     /******************************************/
     /**************** Manifest ****************/
     /******************************************/
-    public string GetName() { return "TeardownM"; }
-    public string GetDescription() { return ""; }
-    public string GetVersion() { return "0.0.1"; }
-    public string GetAuthor() { return "github.com/teardownM"; }
+    public string GetName() {
+        return "TeardownM";
+    }
+
+    public string GetDescription() {
+        return "A Multiplayer Mod for Teardown";
+    }
+
+    public string GetVersion() {
+        return "0.0.1";
+    }
+
+    public string GetAuthor() {
+        return "github.com/teardownM";
+    }
 
     /******************************************/
     /*************** Variables ****************/
@@ -18,45 +32,41 @@ public class TeardownM : ISledgeMod {
     public static Dictionary<string, string> gHashes = new Dictionary<string, string>();
 
     private static string sRequiredVersion = "1.0.0";
+    private static bool bMenuInitialized;
 
-    private static bool bMenuInitialized = false;
-
-    private static Thread? tUpdateKeys;
-    private static bool bReloadStart = false;
-    private static bool bReloadEnd = false;
-    private static bool bDebugMenu = false;
+    private static bool bReloadStart;
+    private static bool bReloadEnd;
+    private static bool bDebugMenu;
 
     /******************************************/
     /*************** Functions ****************/
     /******************************************/
-    private static void UpdateKeys() {
-        while (true) {
-            if ((GetAsyncKeyState(((int)Keycode.VK_HOME)) & 1) == 1) {
-                bDebugMenu = !bDebugMenu;
-                if (bDebugMenu) {
-                    Teardown.EnableDebugMenu();
-                } else {
-                    Teardown.DisableDebugMenu();
-                }
-            }
-        }
-    }
-
     private static void GetHashes() {
         gHashes.Add("Teardown", Sha256.Hash(File.ReadAllBytes(Teardown.sGamePath + "\\teardown.exe").ToString()!));
+        string sLuaFinalHash = "";
+
+        foreach (string sFile in Directory.GetFiles(Teardown.sGamePath + "\\mods\\TeardownM")) {
+            sLuaFinalHash += Sha256.Hash(File.ReadAllBytes(sFile).ToString()!);
+        }
+
+        gHashes.Add("TeardownMLua", Sha256.Hash(sLuaFinalHash));
+
         // We also need the hash of this dll, we have to wait for the launcher so we can get the env var of the launcher path
     }
 
     /******************************************/
     /************* Load / Unload **************/
     /******************************************/
-    private static void Initialize() {
+    public void Load() {
         // This function gets called once the menu has loaded
-        Teardown.Initialize();
+        if (!Teardown.Initialize()) {
+            Log.Error("Failed to initialize TeardownM");
+            return;
+        }
 
-        Log.General("Game Version: " + Teardown.GetGameVersion());
+        // Make sure the required version is met
         if (Teardown.GetGameVersion() != sRequiredVersion) {
-            Log.Error("Game version is not " + sRequiredVersion + "!");
+            Log.Error("Version {0} != {1}", Teardown.GetGameVersion(), sRequiredVersion);
             return;
         }
 
@@ -66,19 +76,10 @@ public class TeardownM : ISledgeMod {
             return;
         }
 
-        // Create a new thread for updating keys
-        tUpdateKeys = new Thread(UpdateKeys);
-        tUpdateKeys.Start();
-
         Discord.SetPresence(Discord.EDiscordState.MainMenu);
 
-        GetHashes();
-
-        MainMenu.Update();
-        bReloadStart = true;
-        bMenuInitialized = true;
-
         Client.m_DeviceID = Guid.NewGuid().ToString();
+        GetHashes();
     }
 
     public void Unload() {
@@ -94,14 +95,15 @@ public class TeardownM : ISledgeMod {
     [Callback(ECallbackType.StateChange)]
     public static void OnStateChange(EGameState GameState) {
         if (GameState == EGameState.Menu) {
-            // Update the main menu (modify the lua file)
             if (!bMenuInitialized) {
-                Initialize();
+                MainMenu.Update();
+
+                bReloadStart = true;
+                bMenuInitialized = true;
             }
 
             // Disconnect from the server if connected
-            if (Client.m_Connected)
-                Network.Disconnect();
+            if (Network.Network.bConnected) Network.Network.Disconnect();
         }
     }
 
@@ -120,6 +122,21 @@ public class TeardownM : ISledgeMod {
             MainMenu.ReloadUI();
             bReloadStart = false;
             bReloadEnd = true;
+        }
+    }
+
+    [Callback(ECallbackType.PreUpdate)]
+    public static void OnPreUpdate() {
+        if (!Teardown.IsFocused()) return;
+
+        if ((GetAsyncKeyState((int) Keycode.VK_HOME) & 1) == 1) {
+            bDebugMenu = !bDebugMenu;
+
+            if (bDebugMenu) {
+                Teardown.EnableDebugMenu();
+            } else {
+                Teardown.DisableDebugMenu();
+            }
         }
     }
 }
