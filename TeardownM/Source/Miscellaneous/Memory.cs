@@ -1,21 +1,21 @@
 using System.Runtime.InteropServices;
 
+namespace TeardownM.Miscellaneous;
+
 public static class Memory {
     // Imports
-    [DllImport("kernel32.dll")]
+    [DllImport("kernel32.dll", SetLastError = true)]
     static extern bool WriteProcessMemory(IntPtr hProcess, IntPtr lpBaseAddress, byte[] lpBuffer, int dwSize, out IntPtr lpNumberOfBytesWritten);
 
-    [DllImport("kernel32.dll")]
+    [DllImport("kernel32.dll", SetLastError = true)]
     static extern IntPtr ReadProcessMemory(IntPtr hProcess, IntPtr lpBaseAddress, byte[] lpBuffer, int dwSize, out IntPtr lpNumberOfBytesRead);
 
-    [DllImport("kernel32.dll")]
-    static extern IntPtr CreateToolhelp32Snapshot(uint dwFlags, uint th32ProcessID);
-
-    [DllImport("kernel32.dll")]
-    static extern IntPtr GetModuleHandle(string lpModuleName);
-
-    [DllImport("kernel32.dll")]
-    static extern IntPtr GetProcAddress(IntPtr hModule, string lpProcName);
+    public static string GetLastErrorString() {
+        // Get the error message but don't throw an exception
+        int error = Marshal.GetLastWin32Error();
+        string message = new System.ComponentModel.Win32Exception(error).Message;
+        return message;
+    }
 
     // Functions
     public static void Write(IntPtr pAddress, byte[] bData) {
@@ -23,7 +23,7 @@ public static class Memory {
         WriteProcessMemory(Teardown.pProcessHandle, pAddress, bData, bData.Length, out pWritten);
 
         if (pWritten == IntPtr.Zero)
-            Log.Error("Failed writing {0} bytes to address {1:X}", bData.Length, pAddress.ToInt64());
+            Log.Error("Failed writing {0} bytes to address {1:X}: {2}", bData.Length, pAddress.ToInt64(), GetLastErrorString());
     }
 
     public static byte[] Read(IntPtr pAddress, int iSize) {
@@ -32,7 +32,7 @@ public static class Memory {
         ReadProcessMemory(Teardown.pProcessHandle, pAddress, bData, iSize, out pRead);
 
         if (pRead == IntPtr.Zero)
-            Log.Error("Failed reading {0} bytes from address {1}", iSize, pAddress);
+            Log.Error("Failed reading {0} bytes from address {1}: {2}", iSize, pAddress.ToInt64(), GetLastErrorString());
 
         return bData;
     }
