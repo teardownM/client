@@ -1,3 +1,5 @@
+namespace TeardownM.Interfaces;
+
 public interface IClientData {
     public string Name { get; set; }
     public string IP { get; set; }
