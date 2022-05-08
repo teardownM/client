@@ -1,12 +1,24 @@
 using System.Diagnostics;
+using System.Runtime.InteropServices;
+using TeardownM.Miscellaneous;
+
+namespace TeardownM;
 
 public static class Teardown {
-    public static int iProcessID;
+    [DllImport("user32.dll", SetLastError = true)]
+    static extern IntPtr GetForegroundWindow();
+    
+    [DllImport("user32.dll", SetLastError = true)]
+    static extern IntPtr FindWindow(string lpClassName, string lpWindowName);
+    
+    [DllImport("oleacc.dll", SetLastError = true)]
+    static extern IntPtr GetProcessHandleFromHwnd(IntPtr hWnd);
+
     public static IntPtr pProcessHandle;
     public static IntPtr pGameBase;
     public static IntPtr pHwnd;
 
-    public static readonly Dictionary<string, int> Offsets = new Dictionary<string, int>() {
+    public static readonly Dictionary<string, int> Offsets = new Dictionary<string, int> {
         { "UiReload", 0xAD98 },
         { "DebugJZ1", 0x3C8AD },
         { "DebugJZ2", 0xC716 },
@@ -26,38 +38,33 @@ public static class Teardown {
         Memory.Write(pGameBase + Offsets["DebugJZ2"], new byte[] { 0x74, 0x18 });
     }
 
+    public static bool IsFocused() {
+        return GetForegroundWindow().ToInt32() == pHwnd.ToInt32();
+    }
+
     public static bool Initialize() {
-        // TeardownConsole.Initialize();
+        GetProcessInfo();
+        sGamePath = Directory.GetCurrentDirectory();
 
         // Make sure the offsets are correct
-        Thread tCheckOffsets = new Thread(() => {
-            Thread.Sleep(1000); // Wait for game to load
-
-            foreach (KeyValuePair<string, int> iOffset in Offsets) {
-                byte[] bData = Memory.Read(pGameBase + iOffset.Value, 2);
-                Log.General("Offset {0} = {1:X}", iOffset.Key, BitConverter.ToUInt16(bData, 0));
-                if (bData.Length == 0) {
-                    Log.Error("Failed reading offset {0}. If you experience any issues, please be patient and wait for an update.", iOffset.Key);
-                    break;
-                }
+        foreach (KeyValuePair<string, int> iOffset in Offsets) {
+            byte[] bData = Memory.Read(pGameBase + iOffset.Value, 2);
+            if (bData.Length == 0) {
+                Log.Error("Failed reading offset {0}. If you experience any issues, please be patient and wait for an update.", iOffset.Key);
+                return false;
             }
+        }
 
-            Log.General("TeardownM Fully Loaded!");
-        });
-        
-        tCheckOffsets.Start();
-
-        GetProcessInfo();
         return true;
     }
 
     public static void GetProcessInfo() {
         Process pTeardown = Process.GetCurrentProcess();
-        sGamePath = Directory.GetCurrentDirectory();
-        pProcessHandle = pTeardown.Handle;
-        iProcessID = pTeardown.Id;
+        
         pGameBase = pTeardown.MainModule!.BaseAddress;
-        pHwnd = pTeardown.MainWindowHandle;
+
+        pHwnd = FindWindow("OpenGL", "Teardown");
+        pProcessHandle = GetProcessHandleFromHwnd(pHwnd);
     }
 
     public static string GetGameVersion() {
