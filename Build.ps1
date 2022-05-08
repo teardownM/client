@@ -88,9 +88,14 @@ if ( $SledgeDir.Length -eq 0 ) {
     Write-Error("SLEDGE_ROOT_DIR is Invalid")
 }
 
+if (-not(Test-Path -Path "$SledgeDir\\mods" -PathType Container)) {
+    Write-Verbose("Creating mods directory")
+    New-Item -Path "$SledgeDir\\mods" -ItemType Directory -Force -ErrorAction SilentlyContinue
+}
+
 Write-Verbose("Checking for Sledge.exe and mods folder")
-if (-not(Test-Path -Path "$SledgeDir\\sledge.exe" -PathType Leaf) -or -not(Test-Path -Path "$SledgeDir\\mods" -PathType Container)) {
-    Write-Error("Unable to locate { sledge.exe || mods }")
+if (-not(Test-Path -Path "$SledgeDir\\sledge.exe" -PathType Leaf)) {
+    Write-Error("Unable to locate sledge.exe in $SledgeDir")
 }
 
 Write-Verbose("Checking for bin\sledgelib.dll")
