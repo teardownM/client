@@ -52,7 +52,6 @@ public static class Network {
         }
 
         Log.Verbose("Successfully authenticated");
-        Log.General("Your ID: {0}", session.UserId);
 
         Task<ISocket> socket = NetSocket.CreateSocket(Connection, session);
         Socket = await socket;
