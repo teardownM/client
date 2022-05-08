@@ -1,5 +1,8 @@
 using SledgeLib;
-using Nakama;
+using TeardownM.Miscellaneous;
+using TeardownM.Network;
+
+namespace TeardownM;
 
 public class LuaFunctions {
     /**************************/
@@ -48,7 +51,7 @@ public class LuaFunctions {
     /**************************/
     [LuaFunction("TDM_GetPlayerName")]
     public static string TDM_GetPlayerName(int iUserID) {
-        if (!Client.m_Connected)
+        if (!Network.Network.bConnected)
             return "";
 
         return "";
@@ -56,7 +59,7 @@ public class LuaFunctions {
 
     [LuaFunction("TDM_GetPlayerSteamID")]
     public static string TDM_GetPlayerSteamID(int iUserID) {
-        if (!Client.m_Connected)
+        if (!Network.Network.bConnected)
             return "";
 
         return "";
@@ -64,7 +67,7 @@ public class LuaFunctions {
 
     [LuaFunction("TDM_GetPlayers")]
     public static string TDM_GetPlayers() { // Return type should be a table/array (returns a list of id's)
-        if (!Client.m_Connected)
+        if (!Network.Network.bConnected)
             return "";
 
         return "None";
@@ -72,7 +75,7 @@ public class LuaFunctions {
 
     [LuaFunction("TDM_GetPlayerCount")]
     public static int TDM_GetPlayerCount() {
-        if (!Client.m_Connected)
+        if (!Network.Network.bConnected)
             return 0;
 
         return 0;
@@ -85,8 +88,8 @@ public class LuaFunctions {
     public static async void TDM_ConnectToServer(string sAddress, int iPort) {
         Log.General("Connecting to server {0}:{1}", sAddress, iPort);
         
-        ISession session = await Network.Connect(sAddress, iPort);
-        if (session == null) {
+        Network.Network.Session = await Network.Network.Connect(sAddress, iPort);
+        if (Network.Network.Session == null) {
             Log.Error("Unable to reach server");
             // Lua.Invoke("TDM_AddToast", "Failed to connect to server");
         } else {
@@ -98,10 +101,10 @@ public class LuaFunctions {
 
     [LuaFunction("TDM_DisconnectFromServer")]
     public static void TDM_DisconnectFromServer() {
-        if (!Client.m_Connected)
+        if (!Network.Network.bConnected)
             return;
 
-        Network.Disconnect();
+        Network.Network.Disconnect();
         Game.State = EGameState.Menu;
     }
 
@@ -112,25 +115,25 @@ public class LuaFunctions {
 
     [LuaFunction("TDM_GetServerIP")]
     public static string TDM_GetServerIP() {
-        if (!Client.m_Connected)
+        if (!Network.Network.bConnected)
             return "";
 
-        return Network.m_sAddress;
+        return Network.Network.sAddress;
     }
 
     [LuaFunction("TDM_GetServerPort")]
     public static int TDM_GetServerPort() {
-        if (!Client.m_Connected)
+        if (!Network.Network.bConnected)
             return 0;
 
-        return Network.m_iPort;
+        return Network.Network.iPort;
     }
 
     [LuaFunction("TDM_GetServerMap")]
     public static string TDM_GetServerMap() {
-        if (!Client.m_Connected)
+        if (!Network.Network.bConnected)
             return "";
 
-        return Network.m_sMap;
+        return Server.Map!;
     }
 }
