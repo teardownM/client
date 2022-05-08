@@ -1,12 +1,12 @@
-﻿using Nakama;
+﻿using System.Net.Sockets;
+using Nakama;
+using Socket = Nakama.Socket;
 
 namespace TeardownM.Network;
 
 public static class NetSocket {
     public static async Task<ISocket> CreateSocket(IClient Connection, ISession? Session) {
-        ISocket? socket;
-        
-        socket = Socket.From(Connection);
+        ISocket socket = Socket.From(Connection);
         await socket.ConnectAsync(Session);
         
         socket.ReceivedError += ReceivedError;
@@ -21,15 +21,15 @@ public static class NetSocket {
         return socket;
     }
     
-    public static void ReceivedError(Exception e) {
+    private static void ReceivedError(Exception e) {
         Log.Error("NetSocket ReceivedError: " + e.Message);
     }
 
-    public static void Connected() {
+    private static void Connected() {
         Log.Verbose("NetSocket Connected");
     }
 
-    public static void Closed() {
+    private static void Closed() {
         Log.Verbose("NetSocket Closed");
     }
 }
