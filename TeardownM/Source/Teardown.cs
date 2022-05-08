@@ -5,6 +5,9 @@ using TeardownM.Miscellaneous;
 namespace TeardownM;
 
 public static class Teardown {
+    /******************************************/
+    /************** DLL Imports ***************/
+    /******************************************/
     [DllImport("user32.dll", SetLastError = true)]
     static extern IntPtr GetForegroundWindow();
     
@@ -14,6 +17,9 @@ public static class Teardown {
     [DllImport("oleacc.dll", SetLastError = true)]
     static extern IntPtr GetProcessHandleFromHwnd(IntPtr hWnd);
 
+    /******************************************/
+    /*************** Variables ****************/
+    /******************************************/
     public static IntPtr pProcessHandle;
     public static IntPtr pGameBase;
     public static IntPtr pHwnd;
@@ -28,6 +34,9 @@ public static class Teardown {
     public static string sGamePath = "";
     public static string sGameVersion = "";
 
+    /******************************************/
+    /*************** Functions ****************/
+    /******************************************/
     public static void EnableDebugMenu() {
         Memory.Write(pGameBase + Offsets["DebugJZ1"], new byte[] { 0x90, 0x90 });
         Memory.Write(pGameBase + Offsets["DebugJZ2"], new byte[] { 0x90, 0x90 });

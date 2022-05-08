@@ -3,6 +3,9 @@ using DiscordRPC;
 namespace TeardownM.Miscellaneous;
 
 public static class Discord {
+    /******************************************/
+    /*************** Variables ****************/
+    /******************************************/
     public enum EDiscordState : uint {
         MainMenu,
         Connected,
@@ -12,6 +15,9 @@ public static class Discord {
     private static DiscordRpcClient? Client;
     private static Dictionary<EDiscordState, RichPresence> Presences = new Dictionary<EDiscordState, RichPresence>();
 
+    /******************************************/
+    /*************** Functions ****************/
+    /******************************************/
     public static bool Initialize() {
         Presences.Add(EDiscordState.MainMenu, new RichPresence {
             State = "In Main-Menu",

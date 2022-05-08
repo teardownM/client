@@ -5,6 +5,9 @@ using TeardownM.Miscellaneous;
 namespace TeardownM.Network;
 
 public static class Network {
+    /******************************************/
+    /*************** Variables ****************/
+    /******************************************/
     public static string sAddress = "";
     public static int iPort = 0;
 
@@ -13,6 +16,9 @@ public static class Network {
     public static IClient? Connection = null;
     public static ISocket? Socket = null;
 
+    /******************************************/
+    /*************** Functions ****************/
+    /******************************************/
     public static async Task<ISession> Connect(string sAddress, int iPort) {
         // Disconnect if we're already connected
         if (bConnected) Disconnect();

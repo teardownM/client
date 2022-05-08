@@ -5,9 +5,9 @@ using TeardownM.Network;
 namespace TeardownM;
 
 public class LuaFunctions {
-    /**************************/
-    /*    Logging Functions   */
-    /**************************/
+    /******************************************/
+    /*************** Logging ****************/
+    /******************************************/
     [LuaFunction("LogVerbose")]
     public static void LogVerbose(string message) {
         Log.Verbose(message);
@@ -23,9 +23,9 @@ public class LuaFunctions {
         Log.Warning(message);
     }
 
-    /**************************/
-    /*      Miscellaneous     */
-    /**************************/
+    /******************************************/
+    /************* Miscellaneous **************/
+    /******************************************/
     [LuaFunction("TDM_SetRichPresence")]
     public static void TDM_SetRichPresence(int iState) {
         Discord.SetPresence((Discord.EDiscordState)iState);
@@ -46,9 +46,9 @@ public class LuaFunctions {
         Game.State = (EGameState)iState;
     }
 
-    /**************************/
-    /*         Player        */
-    /**************************/
+    /******************************************/
+    /***************** Player *****************/
+    /******************************************/
     [LuaFunction("TDM_GetPlayerName")]
     public static string TDM_GetPlayerName(int iUserID) {
         if (!Network.Network.bConnected)
@@ -81,9 +81,9 @@ public class LuaFunctions {
         return 0;
     }
 
-    /**************************/
-    /*         Server        */
-    /**************************/
+    /******************************************/
+    /***************** Server *****************/
+    /******************************************/
     [LuaFunction("TDM_ConnectToServer")]
     public static async void TDM_ConnectToServer(string sAddress, int iPort) {
         Log.General("Connecting to server {0}:{1}", sAddress, iPort);

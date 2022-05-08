@@ -3,13 +3,18 @@ using System.Runtime.InteropServices;
 namespace TeardownM.Miscellaneous;
 
 public static class Memory {
-    // Imports
+    /******************************************/
+    /************** DLL Imports ***************/
+    /******************************************/
     [DllImport("kernel32.dll", SetLastError = true)]
     static extern bool WriteProcessMemory(IntPtr hProcess, IntPtr lpBaseAddress, byte[] lpBuffer, int dwSize, out IntPtr lpNumberOfBytesWritten);
 
     [DllImport("kernel32.dll", SetLastError = true)]
     static extern IntPtr ReadProcessMemory(IntPtr hProcess, IntPtr lpBaseAddress, byte[] lpBuffer, int dwSize, out IntPtr lpNumberOfBytesRead);
 
+    /******************************************/
+    /*************** Functions ****************/
+    /******************************************/
     public static string GetLastErrorString() {
         // Get the error message but don't throw an exception
         int error = Marshal.GetLastWin32Error();

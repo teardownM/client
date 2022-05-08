@@ -89,6 +89,8 @@ public class TeardownM : ISledgeMod {
 
                 bReloadStart = true;
                 bMenuInitialized = true;
+                
+                Log.General("TeardownM Initialized");
             }
 
             // Disconnect from the server if connected

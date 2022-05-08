@@ -1,7 +1,18 @@
 using System.Runtime.InteropServices;
 using System.Reflection;
 
+namespace TeardownM;
+
 public class Log {
+    /******************************************/
+    /************** DLL Imports ***************/
+    /******************************************/
+    [DllImport("sledge_core.dll")]
+    private static extern void _WriteLog(ELogType eLogtype, string cMsg);
+    
+    /******************************************/
+    /*************** Variables ****************/
+    /******************************************/
     private enum ELogType {
         General = 4,
         Warning = 5,
@@ -9,9 +20,9 @@ public class Log {
         Verbose = 7
     }
 
-    [DllImport("sledge_core.dll")]
-    private static extern void _WriteLog(ELogType eLogtype, string cMsg);
-
+    /******************************************/
+    /*************** Functions ****************/
+    /******************************************/
     private static void _Log(ELogType eType, Assembly Caller, string sFormat, params object[] oArgs) {
         string sCallingAssembly = "unknown";
         string? sAssemblyName = Caller.GetName().Name;

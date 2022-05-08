@@ -4,6 +4,46 @@ using Microsoft.Win32.SafeHandles;
 namespace TeardownM.Miscellaneous;
 
 public static class TeardownConsole {
+    /******************************************/
+    /************** DLL Imports ***************/
+    /******************************************/
+    [DllImport("kernel32.dll", EntryPoint = "AllocConsole", SetLastError = true, CharSet = CharSet.Auto, CallingConvention = CallingConvention.StdCall)]
+    private static extern int AllocConsole();
+
+    [DllImport("kernel32.dll", EntryPoint = "AttachConsole", SetLastError = true, CharSet = CharSet.Auto, CallingConvention = CallingConvention.StdCall)]
+    private static extern UInt32 AttachConsole(UInt32 dwProcessId);
+
+    [DllImport("kernel32.dll", EntryPoint = "CreateFileW", SetLastError = true, CharSet = CharSet.Auto, CallingConvention = CallingConvention.StdCall)]
+    private static extern IntPtr CreateFileW(string lpFileName, UInt32 dwDesiredAccess, UInt32 dwShareMode, IntPtr lpSecurityAttributes, UInt32 dwCreationDisposition, UInt32 dwFlagsAndAttributes, IntPtr hTemplateFile);
+
+    [DllImport("kernel32.dll", EntryPoint = "GetConsoleWindow", SetLastError = true, CharSet = CharSet.Auto, CallingConvention = CallingConvention.StdCall)]
+    static extern IntPtr GetConsoleWindow();
+
+    [DllImport("user32.dll", EntryPoint = "SetWindowText", SetLastError = true, CharSet = CharSet.Auto, CallingConvention = CallingConvention.StdCall)]
+    static extern bool SetWindowText(IntPtr hWnd, string lpString);
+
+    [DllImport("user32.dll", EntryPoint = "ShowWindow", SetLastError = true, CharSet = CharSet.Auto, CallingConvention = CallingConvention.StdCall)]
+    static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
+
+    [DllImport("kernel32.dll", EntryPoint = "FreeConsole", SetLastError = true, CharSet = CharSet.Auto, CallingConvention = CallingConvention.StdCall)]
+    static extern bool FreeConsole();
+
+    /******************************************/
+    /*************** Variables ****************/
+    /******************************************/
+    private const UInt32 GENERIC_WRITE = 0x40000000;
+    private const UInt32 GENERIC_READ = 0x80000000;
+    private const UInt32 FILE_SHARE_READ = 0x00000001;
+    private const UInt32 FILE_SHARE_WRITE = 0x00000002;
+    private const UInt32 OPEN_EXISTING = 0x00000003;
+    private const UInt32 FILE_ATTRIBUTE_NORMAL = 0x80;
+    private const UInt32 ERROR_ACCESS_DENIED = 5;
+
+    private const UInt32 ATTACH_PARENT = 0xFFFFFFFF;
+    
+    /******************************************/
+    /*************** Functions ****************/
+    /******************************************/
     public static void Initialize(bool alwaysCreateNewConsole = true) {
         IntPtr hWnd = GetConsoleWindow();
         ShowWindow(hWnd, 0);
@@ -56,35 +96,4 @@ public static class TeardownConsole {
     public static void Close() {
         FreeConsole();
     }
-
-    [DllImport("kernel32.dll", EntryPoint = "AllocConsole", SetLastError = true, CharSet = CharSet.Auto, CallingConvention = CallingConvention.StdCall)]
-    private static extern int AllocConsole();
-
-    [DllImport("kernel32.dll", EntryPoint = "AttachConsole", SetLastError = true, CharSet = CharSet.Auto, CallingConvention = CallingConvention.StdCall)]
-    private static extern UInt32 AttachConsole(UInt32 dwProcessId);
-
-    [DllImport("kernel32.dll", EntryPoint = "CreateFileW", SetLastError = true, CharSet = CharSet.Auto, CallingConvention = CallingConvention.StdCall)]
-    private static extern IntPtr CreateFileW(string lpFileName, UInt32 dwDesiredAccess, UInt32 dwShareMode, IntPtr lpSecurityAttributes, UInt32 dwCreationDisposition, UInt32 dwFlagsAndAttributes, IntPtr hTemplateFile);
-
-    [DllImport("kernel32.dll", EntryPoint = "GetConsoleWindow", SetLastError = true, CharSet = CharSet.Auto, CallingConvention = CallingConvention.StdCall)]
-    static extern IntPtr GetConsoleWindow();
-
-    [DllImport("user32.dll", EntryPoint = "SetWindowText", SetLastError = true, CharSet = CharSet.Auto, CallingConvention = CallingConvention.StdCall)]
-    static extern bool SetWindowText(IntPtr hWnd, string lpString);
-
-    [DllImport("user32.dll", EntryPoint = "ShowWindow", SetLastError = true, CharSet = CharSet.Auto, CallingConvention = CallingConvention.StdCall)]
-    static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
-
-    [DllImport("kernel32.dll", EntryPoint = "FreeConsole", SetLastError = true, CharSet = CharSet.Auto, CallingConvention = CallingConvention.StdCall)]
-    static extern bool FreeConsole();
-
-    private const UInt32 GENERIC_WRITE = 0x40000000;
-    private const UInt32 GENERIC_READ = 0x80000000;
-    private const UInt32 FILE_SHARE_READ = 0x00000001;
-    private const UInt32 FILE_SHARE_WRITE = 0x00000002;
-    private const UInt32 OPEN_EXISTING = 0x00000003;
-    private const UInt32 FILE_ATTRIBUTE_NORMAL = 0x80;
-    private const UInt32 ERROR_ACCESS_DENIED = 5;
-
-    private const UInt32 ATTACH_PARENT = 0xFFFFFFFF;
 }

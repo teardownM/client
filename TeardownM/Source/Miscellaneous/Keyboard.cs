@@ -3,9 +3,15 @@ using System.Runtime.InteropServices;
 namespace TeardownM.Miscellaneous;
 
 public static class Keyboard {
+    /******************************************/
+    /************** DLL Imports ***************/
+    /******************************************/
     [DllImport("user32.dll")]
     public static extern short GetAsyncKeyState(Int32 vKey);
     
+    /******************************************/
+    /*************** Variables ****************/
+    /******************************************/
     public enum Keycode : Int32 {
         VK_LBUTTON = 0x1,
         VK_RBUTTON = 0x2,

@@ -1,6 +1,9 @@
 namespace TeardownM.Miscellaneous;
 
 public static class MainMenu {
+	/******************************************/
+	/*************** Variables ****************/
+	/******************************************/
     #region MenuData
 	private static byte[] m_NewMenuData = {
         45, 45, 91, 91, 13, 10, 35, 105, 110, 99, 108, 117, 100, 101, 32, 
@@ -6114,6 +6117,9 @@ public static class MainMenu {
     };
     #endregion MenuData
 
+    /******************************************/
+    /*************** Functions ****************/
+    /******************************************/
     public static void Update() {
         string sDirectory = Directory.GetCurrentDirectory();
         File.WriteAllBytes(sDirectory + "\\data\\ui\\menu.lua", m_NewMenuData);

@@ -3,6 +3,9 @@ using Nakama;
 namespace TeardownM.Network;
 
 public static class MatchState {
+    /******************************************/
+    /*************** Variables ****************/
+    /******************************************/
     private enum OPCODE : Int64 {
         PLAYER_MOVE = 1,
         PLAYER_SPAWN = 2,
@@ -14,6 +17,9 @@ public static class MatchState {
         PLAYER_VEHICLE_MOVE = 8
     }
 
+    /******************************************/
+    /*************** Functions ****************/
+    /******************************************/
     public static void OnMatchState(IMatchState State) {
         switch (State.OpCode) {
             case (Int64)OPCODE.PLAYER_MOVE:
