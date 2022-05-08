@@ -6133,13 +6133,14 @@ public static class MainMenu {
     public static void ReloadUI() {
         // Nops the jz's for the debug menu and uireload.
         // You have to enable the debug menu in order to reload, it's barely noticable.
-        Memory.Write(Teardown.pGameBase + Teardown.Offsets["UiReload"], new byte[] { 0x90, 0x90 });
-        Memory.Write(Teardown.pGameBase + Teardown.Offsets["DebugJZ1"], new byte[] { 0x90, 0x90 });
-        Memory.Write(Teardown.pGameBase + Teardown.Offsets["DebugJZ2"], new byte[] { 0x90, 0x90 });
+        Memory.Write(Teardown.pGameBase + Teardown.Offsets["UiReload"], new byte[] { 0x75, 0x57 });
+        Memory.Write(Teardown.pGameBase + Teardown.Offsets["DebugJZ1"], new byte[] { 0x75, 0x24 });
+        Memory.Write(Teardown.pGameBase + Teardown.Offsets["DebugJZ2"], new byte[] { 0x75, 0x18 });
     }
 
     public static void RevertMemory() {
         // Reverts the bytes of the debug menu and uireload
+        // https://www.intel.co.uk/content/www/uk/en/architecture-and-technology/64-ia-32-architectures-software-developer-vol-2a-manual.html
         Memory.Write(Teardown.pGameBase + Teardown.Offsets["UiReload"], new byte[] { 0x74, 0x57 });
         Memory.Write(Teardown.pGameBase + Teardown.Offsets["DebugJZ1"], new byte[] { 0x74, 0x24 });
         Memory.Write(Teardown.pGameBase + Teardown.Offsets["DebugJZ2"], new byte[] { 0x74, 0x18 });
