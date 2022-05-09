@@ -1,3 +1,5 @@
+using System.Diagnostics;
+using System.Text.RegularExpressions;
 using SledgeLib;
 using TeardownM.Miscellaneous;
 using TeardownM.Network;
@@ -51,6 +53,34 @@ public class LuaFunctions {
     public static void TDM_SetGameState(int iState) {
         if (IsExternalMod()) return;
         Game.State = (EGameState)iState;
+    }
+
+    [LuaFunction("TDM_OpenURL")]
+    public static bool TDM_OpenURL(string sURL) {
+        Regex rURLRegex = new Regex(@"^https:\/\/");
+        if (!rURLRegex.IsMatch(sURL)) {
+            Log.Warning("TDM_OpenURL: Invalid URL");
+            return false;
+        }
+        
+        Process pURL = new Process();
+        pURL.StartInfo.FileName = "cmd.exe";
+        pURL.StartInfo.Arguments = "/C start " + sURL;
+        
+        try {
+            pURL.Start();
+        } catch (PlatformNotSupportedException) {
+            Log.Warning("TDM_OpenURL: Platform not supported");
+            return false;
+        } catch (InvalidOperationException) {
+            Log.Warning("TDM_OpenURL: Invalid operation");
+            return false;
+        } catch (Exception e) {
+            Log.Warning("TDM_OpenURL: Unhandled Exception: " + e.Message);
+            return false;
+        }
+        
+        return true;
     }
 
     /******************************************/
