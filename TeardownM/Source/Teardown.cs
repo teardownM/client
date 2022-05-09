@@ -1,7 +1,6 @@
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using TeardownM.Miscellaneous;
-using TeardownM.Miscellaneous.UI;
 
 namespace TeardownM;
 
@@ -64,11 +63,11 @@ public static class Teardown {
     
     public static void Shutdown(string? sFormat = null, params object[]? oArgs) {
         Discord.Shutdown();
-        if (!MainMenu.Revert()) {
+        if (!UI.MainMenu.Revert()) {
             Log.Error("Failed to revert main menu");
         }
 
-        if (!HUD.Revert()) {
+        if (!UI.HUD.Revert()) {
             Log.Error("Failed to revert HUD");
         }
         

@@ -1,6 +1,5 @@
 using SledgeLib;
 using TeardownM.Miscellaneous;
-using TeardownM.Miscellaneous.UI;
 using static TeardownM.Miscellaneous.Keyboard;
 
 namespace TeardownM;
@@ -66,17 +65,17 @@ public class TeardownM : ISledgeMod {
         Discord.SetPresence(Discord.EDiscordState.MainMenu);
         GetHashes();
 
-        HUD.Update();
+        UI.HUD.Update();
     }
 
     public void Unload() {
         Discord.Shutdown();
 
-        if (!MainMenu.Revert()) {
+        if (!UI.MainMenu.Revert()) {
             Log.Error("Failed to revert to main menu");
         }
 
-        if (!HUD.Revert()) {
+        if (!UI.HUD.Revert()) {
             Log.Error("Failed to revert HUD");
         }
     }
@@ -88,7 +87,7 @@ public class TeardownM : ISledgeMod {
     public static void OnStateChange(EGameState GameState) {
         if (GameState == EGameState.Menu) {
             if (!bMenuInitialized) {
-                if (!MainMenu.Update()) {
+                if (!UI.MainMenu.Update()) {
                     Log.Error("Failed to initialize main menu");
                     Teardown.Shutdown();
                 }
@@ -110,13 +109,13 @@ public class TeardownM : ISledgeMod {
 
         // Revert the bytes of the debug menu and uireload
         if (!bReloadStart && bReloadEnd) {
-            MainMenu.RevertMemory();
+            UI.MainMenu.RevertMemory();
             bReloadEnd = false;
         }
 
         // Reload the UI
         if (bReloadStart) {
-            MainMenu.ReloadUI();
+            UI.MainMenu.ReloadUI();
             bReloadStart = false;
             bReloadEnd = true;
         }

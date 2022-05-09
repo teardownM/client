@@ -1,4 +1,5 @@
-namespace TeardownM.Miscellaneous.UI;
+namespace TeardownM.UI;
+using Miscellaneous;
 
 public static class MainMenu {
 	/******************************************/
