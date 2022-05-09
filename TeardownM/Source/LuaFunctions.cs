@@ -91,6 +91,11 @@ public class LuaFunctions {
     /******************************************/
     /***************** Server *****************/
     /******************************************/
+    [LuaFunction("TDM_IsConnected")]
+    public static bool TDM_IsConnected() {
+        return Network.Network.bConnected;
+    }
+    
     [LuaFunction("TDM_ConnectToServer")]
     public static async void TDM_ConnectToServer(string sAddress, int iPort) {
         if (IsExternalMod()) return;
