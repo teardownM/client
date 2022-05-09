@@ -27,7 +27,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <AssetsSourceFiles Include="obj/**"/>
+    <AssetsSourceFiles Include="obj/**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Interfaces" />
   </ItemGroup>
 
   <Target Name="CopyNugetTemp" AfterTargets="AfterBuild">

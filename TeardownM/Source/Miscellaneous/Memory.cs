@@ -22,7 +22,6 @@ public static class Memory {
         return message;
     }
 
-    // Functions
     public static void Write(IntPtr pAddress, byte[] bData) {
         IntPtr pWritten;
         WriteProcessMemory(Teardown.pProcessHandle, pAddress, bData, bData.Length, out pWritten);
