@@ -49,21 +49,18 @@ public class TeardownM : ISledgeMod {
     public void Load() {
         // This function gets called once the menu has loaded
         if (!Teardown.Initialize()) {
-            Log.Error("Failed to initialize TeardownM");
-            return;
+            Teardown.Shutdown("Failed to initialize TeardownM");
         }
 
         // Make sure the required version is met
         string sVersion = Teardown.GetGameVersion();
         if (sVersion != sRequiredVersion) {
-            Log.Error("Version {0} != {1}", Teardown.GetGameVersion(), sVersion);
-            return;
+            Teardown.Shutdown("Version {0} != {1}", Teardown.GetGameVersion(), sRequiredVersion);
         }
 
         // Initialize discord
         if (!Discord.Initialize()) {
-            Log.Error("Failed to initialize Discord client");
-            return;
+            Teardown.Shutdown("Failed to initialize Discord client");
         }
 
         Discord.SetPresence(Discord.EDiscordState.MainMenu);
@@ -73,13 +70,11 @@ public class TeardownM : ISledgeMod {
     }
 
     public void Unload() {
-        if (!MainMenu.Revert()) {
-            Log.Error("Failed to revert to main menu");
-            return;
-        }
-
-        TeardownConsole.Close();
         Discord.Shutdown();
+        
+        if (!MainMenu.Revert()) {
+            Teardown.Shutdown("Failed to revert to main menu");
+        }
     }
 
     /******************************************/
@@ -91,7 +86,7 @@ public class TeardownM : ISledgeMod {
             if (!bMenuInitialized) {
                 if (!MainMenu.Update()) {
                     Log.Error("Failed to initialize main menu");
-                    return;
+                    Teardown.Shutdown();
                 }
 
                 bReloadStart = true;

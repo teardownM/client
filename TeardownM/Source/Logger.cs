@@ -32,8 +32,7 @@ public class Log {
         string sMsg;
         try {
             sMsg = string.Format(sFormat, oArgs);
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             Error("Logger error while formatting: {0} \n{1}", e.Message, Environment.StackTrace);
             return;
         }

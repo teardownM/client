@@ -16,6 +16,16 @@ public static class Teardown {
     
     [DllImport("oleacc.dll", SetLastError = true)]
     static extern IntPtr GetProcessHandleFromHwnd(IntPtr hWnd);
+    
+    // Suspend Thread
+    [DllImport("kernel32.dll", SetLastError = true)]
+    static extern uint SuspendThread(IntPtr hThread);
+    
+    [DllImport("kernel32.dll")]
+    static extern IntPtr OpenThread(int dwDesiredAccess, bool bInheritHandle, uint dwThreadId);
+
+    [DllImport("user32.dll", SetLastError = true)]
+    static extern int MessageBox(IntPtr hWnd, string lpText, string lpCaption, uint uType);
 
     /******************************************/
     /*************** Variables ****************/
@@ -49,6 +59,19 @@ public static class Teardown {
 
     public static bool IsFocused() {
         return GetForegroundWindow().ToInt32() == pHwnd.ToInt32();
+    }
+    
+    public static void Shutdown(string? sFormat = null, params object[]? oArgs) {
+        var iThreadID = OpenThread(0x0002, false, (uint)Process.GetCurrentProcess().Threads[0].Id);
+        SuspendThread(iThreadID);
+
+        if (sFormat != "") {
+            string sMessage = string.Format(sFormat!, oArgs!);
+            Log.Error(sMessage);
+            MessageBox(IntPtr.Zero, sMessage, "TeardownM Error", 0x00000010);
+        }
+
+        Process.GetCurrentProcess().Kill();
     }
 
     public static bool Initialize() {
