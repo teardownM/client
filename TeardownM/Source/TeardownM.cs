@@ -73,7 +73,10 @@ public class TeardownM : ISledgeMod {
     }
 
     public void Unload() {
-        MainMenu.Revert();
+        if (!MainMenu.Revert()) {
+            Log.Error("Failed to revert to main menu");
+            return;
+        }
 
         TeardownConsole.Close();
         Discord.Shutdown();
@@ -86,7 +89,10 @@ public class TeardownM : ISledgeMod {
     public static void OnStateChange(EGameState GameState) {
         if (GameState == EGameState.Menu) {
             if (!bMenuInitialized) {
-                MainMenu.Update();
+                if (!MainMenu.Update()) {
+                    Log.Error("Failed to initialize main menu");
+                    return;
+                }
 
                 bReloadStart = true;
                 bMenuInitialized = true;

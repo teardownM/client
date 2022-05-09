@@ -6120,14 +6120,14 @@ public static class MainMenu {
     /******************************************/
     /*************** Functions ****************/
     /******************************************/
-    public static void Update() {
-        string sDirectory = Directory.GetCurrentDirectory();
-        File.WriteAllBytes(sDirectory + "\\data\\ui\\menu.lua", m_NewMenuData);
+    public static bool Update() {
+        string sFilePath = Directory.GetCurrentDirectory() + "\\data\\ui\\menu.lua";
+        return Utilities.WriteBytesToFile(sFilePath, m_NewMenuData);
     }
 
-    public static void Revert() {
-        string sDirectory = Directory.GetCurrentDirectory();
-        File.WriteAllBytes(sDirectory + "\\data\\ui\\menu.lua", m_OldMenuData);
+    public static bool Revert() {
+        string sFilePath = Directory.GetCurrentDirectory() + "\\data\\ui\\menu.lua";
+        return Utilities.WriteBytesToFile(sFilePath, m_OldMenuData);
     }
 
     public static void ReloadUI() {
