@@ -1,6 +1,6 @@
 ﻿namespace TeardownM.Miscellaneous; 
 
-public class Utilities {
+public static class Utilities {
     public static bool WriteBytesToFile(string sFilePath, byte[] bData) {
         try {
             using FileStream fFileStream = new FileStream(sFilePath, FileMode.Truncate, FileAccess.Write);
