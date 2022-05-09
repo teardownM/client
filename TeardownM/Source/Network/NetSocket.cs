@@ -5,10 +5,9 @@ using Socket = Nakama.Socket;
 namespace TeardownM.Network;
 
 public static class NetSocket {
-    public static async Task<ISocket> CreateSocket(IClient Connection, ISession? Session) {
+    public static Task<ISocket> CreateSocket(IClient Connection) {
         ISocket socket = Socket.From(Connection);
-        await socket.ConnectAsync(Session);
-        
+
         socket.ReceivedError += ReceivedError;
         socket.Connected += Connected;
         socket.Closed += Closed;
@@ -18,7 +17,7 @@ public static class NetSocket {
 
         Log.Verbose("Socket created");
         
-        return socket;
+        return Task.FromResult(socket);
     }
     
     private static void ReceivedError(Exception e) {

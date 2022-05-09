@@ -99,7 +99,6 @@ public class LuaFunctions {
         
         Network.Network.Session = await Network.Network.Connect(sAddress, iPort);
         if (Network.Network.Session == null) {
-            Log.Error("Unable to reach server");
             // Lua.Invoke("TDM_AddToast", "Failed to connect to server");
         } else {
             Log.General("Connected to server");

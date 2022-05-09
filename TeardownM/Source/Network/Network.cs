@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using Nakama;
 using Newtonsoft.Json;
 using TeardownM.Miscellaneous;
@@ -23,6 +24,19 @@ public static class Network {
         // Disconnect if we're already connected
         if (bConnected) Disconnect();
 
+        if (iPort < 1 || iPort > 65535) {
+            Log.Error("Port must be between 1 and 65535.");
+            return null!;
+        }
+        
+        // IP Regex
+        var rIP = new Regex(@"^(?:\d{1,3}\.){3}\d{1,3}$");
+
+        if (!rIP.IsMatch(sAddress)) {
+            Log.Error("Invalid IP address.");
+            return null!;
+        }
+
         Network.sAddress = sAddress;
         Network.iPort = iPort;
 
@@ -30,31 +44,39 @@ public static class Network {
 
         // Connect to Nakama server
         Connection = new Nakama.Client("http", sAddress, iPort, "defaultkey");
-        Connection.Timeout = 4;
+        Connection.Timeout = 1;
+        
+        Task<ISocket> socket = NetSocket.CreateSocket(Connection);
+        Socket = await socket;
 
         if (Connection == null) {
             Log.Error("Failed to create connection");
             return await Task.FromResult<ISession>(null!);
         }
+        
+        CancellationTokenSource sCancellationTokenS = new CancellationTokenSource();
+        CancellationToken cCancellationToken = sCancellationTokenS.Token;
+        
+        RetryConfiguration rRetryConfiguration = new RetryConfiguration(1, 2);
 
         try {
-            session = await Connection.AuthenticateDeviceAsync(Client.m_DeviceID, Client.m_DeviceID);
-            Log.Verbose("Successfully authenticated");
-            Log.General("Your ID: {0}", session.UserId);
+            session = await Connection.AuthenticateDeviceAsync(Client.m_DeviceID, Client.m_DeviceID, retryConfiguration: rRetryConfiguration, canceller: cCancellationToken);
+        } catch (HttpRequestException) {
+            Log.Error("Server not found");
+            return await Task.FromResult<ISession>(null!);
         } catch (Exception) {
-            Log.Error("Failed to authenticate");
+            Log.Error("Failed Connecting to {0}:{1}", sAddress, iPort);
             return await Task.FromResult<ISession>(null!);
         }
 
-        if (session.HasExpired(DateTime.UtcNow.AddSeconds(1))) {
-            Log.Error("Failed to create session");
+        if (session == null) {
+            Log.Error("Failed Connecting to {0}:{1}", sAddress, iPort);
             return await Task.FromResult<ISession>(null!);
         }
 
         Log.Verbose("Successfully authenticated");
 
-        Task<ISocket> socket = NetSocket.CreateSocket(Connection, session);
-        Socket = await socket;
+        await Socket.ConnectAsync(session);
 
         IApiRpc response = await Connection.RpcAsync(session, "rpc_get_matches");
         JsonConvert.DeserializeObject<Server>(response.Payload.Substring(1, response.Payload.Length - 2));
