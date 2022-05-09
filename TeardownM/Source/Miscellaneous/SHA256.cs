@@ -2,18 +2,18 @@ using System.Text;
 
 namespace TeardownM.Miscellaneous;
 
-public class Sha256 {
+public static class Sha256 {
     /******************************************/
     /*************** Variables ****************/
     /******************************************/
-    struct SHA256_CTX {
+    private struct SHA256_CTX {
         public byte[] data;
         public uint datalen;
         public uint[] bitlen;
         public uint[] state;
     }
 
-    static uint[] k = {
+    private static uint[] k = {
         0x428a2f98,0x71374491,0xb5c0fbcf,0xe9b5dba5,0x3956c25b,0x59f111f1,0x923f82a4,0xab1c5ed5,
         0xd807aa98,0x12835b01,0x243185be,0x550c7dc3,0x72be5d74,0x80deb1fe,0x9bdc06a7,0xc19bf174,
         0xe49b69c1,0xefbe4786,0x0fc19dc6,0x240ca1cc,0x2de92c6f,0x4a7484aa,0x5cb0a9dc,0x76f988da,
@@ -27,17 +27,17 @@ public class Sha256 {
     /******************************************/
     /*************** Functions ****************/
     /******************************************/
-    static void DBL_INT_ADD(ref uint a, ref uint b, uint c) { if (a > 0xffffffff - c) ++b; a += c; }
-    static uint ROTLEFT(uint a, byte b) { return ((a << b) | (a >> (32 - b))); }
-    static uint ROTRIGHT(uint a, byte b) { return (((a) >> (b)) | ((a) << (32 - (b)))); }
-    static uint CH(uint x, uint y, uint z) { return (((x) & (y)) ^ (~(x) & (z))); }
-    static uint MAJ(uint x, uint y, uint z) { return (((x) & (y)) ^ ((x) & (z)) ^ ((y) & (z))); }
-    static uint EP0(uint x) { return (ROTRIGHT(x, 2) ^ ROTRIGHT(x, 13) ^ ROTRIGHT(x, 22)); }
-    static uint EP1(uint x) { return (ROTRIGHT(x, 6) ^ ROTRIGHT(x, 11) ^ ROTRIGHT(x, 25)); }
-    static uint SIG0(uint x) { return (ROTRIGHT(x, 7) ^ ROTRIGHT(x, 18) ^ ((x) >> 3)); }
-    static uint SIG1(uint x) { return (ROTRIGHT(x, 17) ^ ROTRIGHT(x, 19) ^ ((x) >> 10)); }
+    private static void DBL_INT_ADD(ref uint a, ref uint b, uint c) { if (a > 0xffffffff - c) ++b; a += c; }
+    private static uint ROTLEFT(uint a, byte b) { return ((a << b) | (a >> (32 - b))); }
+    private static uint ROTRIGHT(uint a, byte b) { return (((a) >> (b)) | ((a) << (32 - (b)))); }
+    private static uint CH(uint x, uint y, uint z) { return (((x) & (y)) ^ (~(x) & (z))); }
+    private static uint MAJ(uint x, uint y, uint z) { return (((x) & (y)) ^ ((x) & (z)) ^ ((y) & (z))); }
+    private static uint EP0(uint x) { return (ROTRIGHT(x, 2) ^ ROTRIGHT(x, 13) ^ ROTRIGHT(x, 22)); }
+    private static uint EP1(uint x) { return (ROTRIGHT(x, 6) ^ ROTRIGHT(x, 11) ^ ROTRIGHT(x, 25)); }
+    private static uint SIG0(uint x) { return (ROTRIGHT(x, 7) ^ ROTRIGHT(x, 18) ^ ((x) >> 3)); }
+    private static uint SIG1(uint x) { return (ROTRIGHT(x, 17) ^ ROTRIGHT(x, 19) ^ ((x) >> 10)); }
 
-    static void SHA256Transform(ref SHA256_CTX ctx, byte[] data) {
+    private static void SHA256Transform(ref SHA256_CTX ctx, byte[] data) {
         uint a, b, c, d, e, f, g, h, i, j, t1, t2;
         uint[] m = new uint[64];
 
@@ -79,7 +79,7 @@ public class Sha256 {
         ctx.state[7] += h;
     }
 
-    static void SHA256Init(ref SHA256_CTX ctx) {
+    private static void SHA256Init(ref SHA256_CTX ctx) {
         ctx.datalen = 0;
         ctx.bitlen[0] = 0;
         ctx.bitlen[1] = 0;
@@ -93,7 +93,7 @@ public class Sha256 {
         ctx.state[7] = 0x5be0cd19;
     }
 
-    static void SHA256Update(ref SHA256_CTX ctx, byte[] data, uint len) {
+    private static void SHA256Update(ref SHA256_CTX ctx, byte[] data, uint len) {
         for (uint i = 0; i < len; ++i) {
             ctx.data[ctx.datalen] = data[i];
             ctx.datalen++;
@@ -106,7 +106,7 @@ public class Sha256 {
         }
     }
 
-    static void SHA256Final(ref SHA256_CTX ctx, byte[] hash) {
+    private static void SHA256Final(ref SHA256_CTX ctx, byte[] hash) {
         uint i = ctx.datalen;
 
         if (ctx.datalen < 56) {
