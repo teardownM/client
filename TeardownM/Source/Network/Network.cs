@@ -24,13 +24,14 @@ public static class Network {
         // Disconnect if we're already connected
         if (bConnected) Disconnect();
 
+        // Make sure the port is valid
         if (iPort < 1 || iPort > 65535) {
             Log.Error("Port must be between 1 and 65535.");
             return null!;
         }
         
-        // IP Regex
-        var rIP = new Regex(@"^(?:\d{1,3}\.){3}\d{1,3}$");
+        // Make sure the IP Address is valid
+        Regex rIP = new Regex(@"^(?:\d{1,3}\.){3}\d{1,3}$");
 
         if (!rIP.IsMatch(sAddress)) {
             Log.Error("Invalid IP address.");
@@ -40,14 +41,16 @@ public static class Network {
         Network.sAddress = sAddress;
         Network.iPort = iPort;
 
-        ISession? session = null;
+        ISession? sSession = null;
 
         // Connect to Nakama server
         Connection = new Nakama.Client("http", sAddress, iPort, "defaultkey");
         Connection.Timeout = 1;
         
-        Task<ISocket> socket = NetSocket.CreateSocket(Connection);
-        Socket = await socket;
+        Task<ISocket> sSocket = NetSocket.CreateSocket(Connection);
+        Socket = await sSocket;
+        
+        Client.m_DeviceID = Guid.NewGuid().ToString();
 
         CancellationTokenSource sCancellationTokenS = new CancellationTokenSource();
         CancellationToken cCancellationToken = sCancellationTokenS.Token;
@@ -55,7 +58,7 @@ public static class Network {
         RetryConfiguration rRetryConfiguration = new RetryConfiguration(1, 2);
 
         try {
-            session = await Connection.AuthenticateDeviceAsync(Client.m_DeviceID, Client.m_DeviceID, retryConfiguration: rRetryConfiguration, canceller: cCancellationToken);
+            sSession = await Connection.AuthenticateDeviceAsync(Client.m_DeviceID, Client.m_DeviceID, retryConfiguration: rRetryConfiguration, canceller: cCancellationToken);
         } catch (HttpRequestException) {
             Log.Error("Server not found");
             return await Task.FromResult<ISession>(null!);
@@ -64,24 +67,26 @@ public static class Network {
             return await Task.FromResult<ISession>(null!);
         }
 
-        if (session == null) {
+        await Connection.LinkDeviceAsync(sSession, Client.m_DeviceID, canceller: cCancellationToken);
+
+        if (sSession == null) {
             Log.Error("Failed Connecting to {0}:{1}", sAddress, iPort);
             return await Task.FromResult<ISession>(null!);
         }
 
         Log.Verbose("Successfully authenticated");
 
-        await Socket.ConnectAsync(session);
+        await Socket.ConnectAsync(sSession);
 
-        IApiRpc response = await Connection.RpcAsync(session, "rpc_get_matches");
-        JsonConvert.DeserializeObject<Server>(response.Payload.Substring(1, response.Payload.Length - 2));
+        IApiRpc rResponse = await Connection.RpcAsync(sSession, "rpc_get_matches", canceller: cCancellationToken);
+        JsonConvert.DeserializeObject<Server>(rResponse.Payload.Substring(1, rResponse.Payload.Length - 2));
 
-        IMatch match = await Socket.JoinMatchAsync(Server.MatchID);
-        Log.Verbose("Joined match {0}", match.Id);
+        IMatch mMatch = await Socket.JoinMatchAsync(Server.MatchID);
+        Log.Verbose("Joined match {0}", mMatch.Id);
 
         bConnected = true;
 
-        return session;
+        return sSession;
     }
 
     public static async void Disconnect() {
