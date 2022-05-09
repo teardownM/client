@@ -1,3 +1,5 @@
+using System.Diagnostics;
+using System.Text.RegularExpressions;
 using SledgeLib;
 using TeardownM.Miscellaneous;
 using static TeardownM.Miscellaneous.Keyboard;
@@ -99,7 +101,10 @@ public class TeardownM : ISledgeMod {
             }
 
             // Disconnect from the server if connected
-            if (Network.Network.bConnected) Network.Network.Disconnect();
+            if (Network.Network.bConnected) {
+                Network.Network.bConnected = false;
+                Network.Network.Disconnect();
+            }
         }
     }
 

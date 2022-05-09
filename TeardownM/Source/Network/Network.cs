@@ -100,7 +100,6 @@ public static class Network {
         }
 
         Log.General("Disconnected from server");
-        bConnected = false;
 
         Discord.SetPresence(Discord.EDiscordState.MainMenu);
 
