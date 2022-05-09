@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using TeardownM.Miscellaneous;
+using TeardownM.Miscellaneous.UI;
 
 namespace TeardownM;
 
@@ -62,12 +63,22 @@ public static class Teardown {
     }
     
     public static void Shutdown(string? sFormat = null, params object[]? oArgs) {
-        var iThreadID = OpenThread(0x0002, false, (uint)Process.GetCurrentProcess().Threads[0].Id);
-        SuspendThread(iThreadID);
+        Discord.Shutdown();
+        if (!MainMenu.Revert()) {
+            Log.Error("Failed to revert main menu");
+        }
 
-        if (sFormat != "") {
+        if (!HUD.Revert()) {
+            Log.Error("Failed to revert HUD");
+        }
+        
+        if (sFormat != null && oArgs != null) {
+            var iThreadID = OpenThread(0x0002, false, (uint)Process.GetCurrentProcess().Threads[0].Id);
+            SuspendThread(iThreadID);
+            
             string sMessage = string.Format(sFormat!, oArgs!);
             Log.Error(sMessage);
+            
             MessageBox(IntPtr.Zero, sMessage, "TeardownM Error", 0x00000010);
         }
 
