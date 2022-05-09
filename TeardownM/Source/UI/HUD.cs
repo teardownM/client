@@ -1,4 +1,5 @@
-﻿namespace TeardownM.Miscellaneous.UI; 
+﻿namespace TeardownM.UI;
+using Miscellaneous;
 
 public class HUD {
     /******************************************/
@@ -6937,13 +6938,11 @@ public class HUD {
     /******************************************/
     public static bool Update() {
 	    string sFilePath = Directory.GetCurrentDirectory() + "\\data\\ui\\hud.lua";
-	    // return Utilities.WriteBytesToFile(sFilePath, m_NewHUDData);
-	    return true;
+	    return Utilities.WriteBytesToFile(sFilePath, m_NewHUDData);
     }
 
     public static bool Revert() {
 	    string sFilePath = Directory.GetCurrentDirectory() + "\\data\\ui\\hud.lua";
-	    // return Utilities.WriteBytesToFile(sFilePath, m_OldHUDData);
-	    return true;
+	    return Utilities.WriteBytesToFile(sFilePath, m_OldHUDData);
     }
 }
