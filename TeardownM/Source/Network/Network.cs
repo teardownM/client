@@ -49,11 +49,6 @@ public static class Network {
         Task<ISocket> socket = NetSocket.CreateSocket(Connection);
         Socket = await socket;
 
-        if (Connection == null) {
-            Log.Error("Failed to create connection");
-            return await Task.FromResult<ISession>(null!);
-        }
-        
         CancellationTokenSource sCancellationTokenS = new CancellationTokenSource();
         CancellationToken cCancellationToken = sCancellationTokenS.Token;
         
