@@ -1,7 +1,7 @@
 using SledgeLib;
 using TeardownM.Miscellaneous;
+using TeardownM.Miscellaneous.UI;
 using static TeardownM.Miscellaneous.Keyboard;
-using TeardownM.Network;
 
 namespace TeardownM;
 
@@ -64,16 +64,20 @@ public class TeardownM : ISledgeMod {
         }
 
         Discord.SetPresence(Discord.EDiscordState.MainMenu);
-
-        Client.m_DeviceID = Guid.NewGuid().ToString();
         GetHashes();
+
+        HUD.Update();
     }
 
     public void Unload() {
         Discord.Shutdown();
-        
+
         if (!MainMenu.Revert()) {
-            Teardown.Shutdown("Failed to revert to main menu");
+            Log.Error("Failed to revert to main menu");
+        }
+
+        if (!HUD.Revert()) {
+            Log.Error("Failed to revert HUD");
         }
     }
 
@@ -130,6 +134,8 @@ public class TeardownM : ISledgeMod {
             } else {
                 Teardown.DisableDebugMenu();
             }
+        } else if ((GetAsyncKeyState((int) Keycode.VK_F4) & 1) == 1 && (GetAsyncKeyState((int) Keycode.VK_MENU) & 1) == 1) {
+            Teardown.Shutdown();
         }
     }
 }
